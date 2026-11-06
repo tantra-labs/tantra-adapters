@@ -21,7 +21,7 @@
 * **Type Safety**: Strictly enforced type annotations (`pyright` / `mypy` strict mode).
 * **Zero Floats Policy**: Decimals (`decimal.Decimal`) for all financial values.
 * **TDD & Parallel Test Directory Rule (MANDATORY)**:
-  - Tests live in `tests/` parallel to `src/` (e.g. `tests/test_dhan.py`, `tests/test_zerodha.py`).
+  - Tests live in `tests/` parallel to `src/`, or in a `src/tests/` module directory (e.g. `tests/test_dhan.py`, `tests/test_zerodha.py`).
 * **Check .agents/HANDOFF.md**: Review pending adapter migrations and contract status.
 
 ---
