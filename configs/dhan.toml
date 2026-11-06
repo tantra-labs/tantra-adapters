@@ -1,0 +1,9 @@
+# Dhan (DhanHQ) v2 template (live).
+broker = "dhan"
+paper = false
+# base_url = "https://api.dhan.co"
+
+[credentials]
+api_key = ""
+access_token = "YOUR_ACCESS_TOKEN"
+client_id = "YOUR_CLIENT_ID"

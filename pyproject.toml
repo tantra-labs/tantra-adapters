@@ -1,12 +1,56 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "vyapaar-adapters"
 version = "0.1.0"
-description = "vyapaar-adapters component of Vyapaar Labs"
+description = "Pluggable Python Anti-Corruption Layer (ACL) connectors for Indian brokers: Dhan, Zerodha, Angel One, Upstox, Fyers, Kotak, IIFL."
 readme = "README.md"
 requires-python = ">=3.11"
+license = { text = "MIT" }
 dependencies = [
-    "rust_decimal>=1.0.0",
+    "vyapaar>=0.1.0",
+    "pydantic>=2.0.0",
 ]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "ruff>=0.4.0",
+    "mypy>=1.8.0",
+]
+
+[project.entry-points."vyapaar.adapters"]
+dhan = "vyapaar_adapters.dhan:DhanAdapter"
+zerodha = "vyapaar_adapters.zerodha:ZerodhaAdapter"
+angelone = "vyapaar_adapters.angelone:AngelOneAdapter"
+upstox = "vyapaar_adapters.upstox:UpstoxAdapter"
+fyers = "vyapaar_adapters.fyers:FyersAdapter"
+kotak = "vyapaar_adapters.kotak:KotakAdapter"
+iifl = "vyapaar_adapters.iifl:IIFLAdapter"
+
+[tool.setuptools.packages.find]
+include = ["vyapaar_adapters*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = [".venv", "site", "build"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.11"
+check_untyped_defs = true
+disallow_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+ignore_missing_imports = true
+exclude = [".venv", "site", "build"]

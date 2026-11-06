@@ -1,0 +1,9 @@
+# Zerodha Kite Connect template (live).
+broker = "zerodha"
+paper = false
+# base_url = "https://api.kite.trade"
+
+[credentials]
+api_key = "YOUR_API_KEY"
+access_token = "YOUR_ACCESS_TOKEN"
+client_id = ""

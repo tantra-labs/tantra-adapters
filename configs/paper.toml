@@ -1,0 +1,8 @@
+# Paper broker connection template (deterministic offline simulation).
+broker = "paper"
+paper = true
+
+[credentials]
+api_key = "paper"
+access_token = "paper"
+client_id = "paper"
