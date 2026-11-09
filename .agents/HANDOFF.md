@@ -19,8 +19,12 @@
     fallback.
 * Zone 4 `examples/` + `scripts/`. CI: `.github/workflows/ci.yml`.
 * **Documentation added** (this session): `docs/gaps/` (7 gaps), `docs/plans/`
-  (plan 0002 tracking gaps 0001–0007), `docs/design/` (architecture + 5 code
-  reference docs), `docs/roadmap/` (roadmap + T6B completion record).
+  (plan 0002 tracking gaps 0001–0007), `docs/design/` (architecture + migration map
+  + 5 code reference docs), `docs/roadmap/` (roadmap + T6B completion record +
+  migration verification).
+- `docs/migration-guide.md` decimated: historical migration map moved to
+  `docs/design/code-migration-map.md`; verification commands moved to
+  `docs/roadmap/migration-verification.md`; original `migration-guide.md` removed.
 
 ## Decisions & Discoveries
 * pyproject: removed `rust_decimal`; declared `vyapaar` + `pydantic`; all 7
