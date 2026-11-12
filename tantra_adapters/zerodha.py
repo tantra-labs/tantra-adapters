@@ -1,6 +1,6 @@
 """Zerodha Kite Connect REST adapter.
 
-Translates Kite wire payloads to canonical Vyapaar models. Prices arrive as
+Translates Kite wire payloads to canonical Tantra models. Prices arrive as
 exact ``Decimal`` values (the transport decodes JSON numbers with
 ``parse_float=Decimal``); no ``float`` is used in any financial field.
 """
@@ -10,8 +10,8 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 
-from vyapaar_adapters.common.base import BaseRestAdapter
-from vyapaar_adapters.common.models import (
+from tantra_adapters.common.base import BaseRestAdapter
+from tantra_adapters.common.models import (
     Bar,
     Margin,
     Order,
@@ -23,7 +23,7 @@ from vyapaar_adapters.common.models import (
     Quote,
     TimeInForce,
 )
-from vyapaar_adapters.common.parse import as_decimal, as_iso_ts
+from tantra_adapters.common.parse import as_decimal, as_iso_ts
 
 
 class ZerodhaAdapter(BaseRestAdapter):

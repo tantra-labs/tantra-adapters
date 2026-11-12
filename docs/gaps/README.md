@@ -1,4 +1,4 @@
-# Gaps Index — `vyapaar-adapters`
+# Gaps Index — `tantra-adapters`
 
 Per workspace rule `.agents/rules/gap-tracking.md`:
 - Gaps are individual stubs, missing features, or rule violations.

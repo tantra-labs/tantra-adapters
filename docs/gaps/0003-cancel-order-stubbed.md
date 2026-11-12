@@ -34,7 +34,7 @@ translation.
 
 ## Why
 
-Downstream consumers (`vyapaar-ledger` OMS, `vyapaar-exec` router, strategy
+Downstream consumers (`tantra-ledger` OMS, `tantra-exec` router, strategy
 `on_order_event`) rely on the cancelled `Order` to reconcile state. A fabricated
 `Order` with zeroed fields corrupts position reconciliation and makes it
 impossible to distinguish a successful cancel from a failed one.

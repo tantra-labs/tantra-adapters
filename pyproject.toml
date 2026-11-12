@@ -3,14 +3,14 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "vyapaar-adapters"
+name = "tantra-adapters"
 version = "0.1.0"
 description = "Pluggable Python Anti-Corruption Layer (ACL) connectors for Indian brokers: Dhan, Zerodha, Angel One, Upstox, Fyers, Kotak, IIFL."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 dependencies = [
-    "vyapaar>=0.1.0",
+    "tantra>=0.1.0",
     "pydantic>=2.0.0",
 ]
 
@@ -21,17 +21,17 @@ dev = [
     "mypy>=1.8.0",
 ]
 
-[project.entry-points."vyapaar.adapters"]
-dhan = "vyapaar_adapters.dhan:DhanAdapter"
-zerodha = "vyapaar_adapters.zerodha:ZerodhaAdapter"
-angelone = "vyapaar_adapters.angelone:AngelOneAdapter"
-upstox = "vyapaar_adapters.upstox:UpstoxAdapter"
-fyers = "vyapaar_adapters.fyers:FyersAdapter"
-kotak = "vyapaar_adapters.kotak:KotakAdapter"
-iifl = "vyapaar_adapters.iifl:IIFLAdapter"
+[project.entry-points."tantra.adapters"]
+dhan = "tantra_adapters.dhan:DhanAdapter"
+zerodha = "tantra_adapters.zerodha:ZerodhaAdapter"
+angelone = "tantra_adapters.angelone:AngelOneAdapter"
+upstox = "tantra_adapters.upstox:UpstoxAdapter"
+fyers = "tantra_adapters.fyers:FyersAdapter"
+kotak = "tantra_adapters.kotak:KotakAdapter"
+iifl = "tantra_adapters.iifl:IIFLAdapter"
 
 [tool.setuptools.packages.find]
-include = ["vyapaar_adapters*"]
+include = ["tantra_adapters*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

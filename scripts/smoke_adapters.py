@@ -3,8 +3,8 @@
 
 from __future__ import annotations
 
-from vyapaar_adapters.common.transport import MockTransport
-from vyapaar_adapters.registry import load_adapters
+from tantra_adapters.common.transport import MockTransport
+from tantra_adapters.registry import load_adapters
 
 
 def smoke() -> int:

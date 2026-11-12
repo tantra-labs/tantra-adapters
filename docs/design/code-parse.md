@@ -1,6 +1,6 @@
-# `vyapaar-adapters` — Strict Parsing Reference
+# `tantra-adapters` — Strict Parsing Reference
 
-Documents `vyapaar_adapters/common/parse.py`: the three strict parsing helpers that
+Documents `tantra_adapters/common/parse.py`: the three strict parsing helpers that
 enforce the **zero-floats invariant** at the broker boundary. Every adapter converts
 wire values through these helpers; nothing in the package parses financial values any
 other way.
@@ -11,7 +11,7 @@ Broker JSON payloads contain numbers (`24567.8`), numeric strings (`"24567.8"`),
 occasionally malformed values (`"N/A"`, `null`, `""`). Python's default `json.loads`
 turns bare numbers into binary `float`, which cannot represent decimal amounts like
 `0.1` exactly. A `float` that sneaks into a `Price`/`Quantity` field silently corrupts
-downstream `vyapaar-ledger` accounting.
+downstream `tantra-ledger` accounting.
 
 `parse.py` closes both ends of that hole:
 

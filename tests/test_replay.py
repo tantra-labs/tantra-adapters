@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from vyapaar_adapters.common.codec import from_plain, to_plain
-from vyapaar_adapters.common.models import (
+from tantra_adapters.common.codec import from_plain, to_plain
+from tantra_adapters.common.models import (
     Margin,
     Order,
     OrderRequest,
@@ -43,8 +43,8 @@ def test_codec_roundtrip_for_models() -> None:
 
 
 def test_recording_then_replay_produces_same_results(tmp_path) -> None:
-    from vyapaar_adapters.common.fixtures import load_fixture, record_fixture
-    from vyapaar_adapters.paper import PaperBroker, RecordingAdapter, ReplayingAdapter
+    from tantra_adapters.common.fixtures import load_fixture, record_fixture
+    from tantra_adapters.paper import PaperBroker, RecordingAdapter, ReplayingAdapter
 
     broker = PaperBroker({"NSE:RELIANCE-EQ": "2456.70"})
     sink: list[dict[str, object]] = []

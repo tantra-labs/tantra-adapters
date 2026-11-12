@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from vyapaar_adapters.common.parse import as_decimal, as_iso_ts, non_negative_decimal
+from tantra_adapters.common.parse import as_decimal, as_iso_ts, non_negative_decimal
 
 
 def test_as_decimal_accepts_exact_inputs() -> None:

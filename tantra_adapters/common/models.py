@@ -1,6 +1,6 @@
 """Canonical broker-agnostic models.
 
-Every financial field is an exact ``decimal.Decimal``; enums use the Vyapaar
+Every financial field is an exact ``decimal.Decimal``; enums use the Tantra
 Ubiquitous Language (``OrderSide::{Buy, Sell}``, ``OrderType::{Limit, Market,
 StopLimit, StopMarket}``, ``TimeInForce::{Day, IOC, GTD}``). Brokers translate
 into and out of these types only — no broker-specific structure leaks outward.
@@ -13,7 +13,7 @@ from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 
-from vyapaar_adapters.common.parse import as_decimal, non_negative_decimal
+from tantra_adapters.common.parse import as_decimal, non_negative_decimal
 
 
 class OrderSide(StrEnum):

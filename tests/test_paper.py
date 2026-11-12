@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from vyapaar_adapters.common.models import (
+from tantra_adapters.common.models import (
     OrderRequest,
     OrderSide,
     OrderStatus,
     OrderType,
 )
-from vyapaar_adapters.paper import PaperBroker
+from tantra_adapters.paper import PaperBroker
 
 
 def make_broker() -> PaperBroker:

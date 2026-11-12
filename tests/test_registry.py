@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from vyapaar_adapters.dhan import DhanAdapter
-from vyapaar_adapters.registry import BROKER_ADAPTERS, load_adapters
+from tantra_adapters.dhan import DhanAdapter
+from tantra_adapters.registry import BROKER_ADAPTERS, load_adapters
 
 BROKERS = ("dhan", "zerodha", "angelone", "upstox", "fyers", "kotak", "iifl")
 
@@ -28,10 +28,10 @@ def test_pyproject_declares_all_entry_points() -> None:
     pyproject = tomllib.loads(
         (Path(__file__).resolve().parent.parent / "pyproject.toml").read_text()
     )
-    entry_points = pyproject["project"]["entry-points"]["vyapaar.adapters"]
+    entry_points = pyproject["project"]["entry-points"]["tantra.adapters"]
     assert set(entry_points) == set(BROKERS)
     for name in BROKERS:
-        assert entry_points[name].startswith("vyapaar_adapters.")
+        assert entry_points[name].startswith("tantra_adapters.")
 
 
 def test_dhan_adapter_importable() -> None:
@@ -39,7 +39,7 @@ def test_dhan_adapter_importable() -> None:
 
 
 def test_registry_types_are_subclasses_of_base_adapter() -> None:
-    from vyapaar_adapters.common.base import BaseRestAdapter
+    from tantra_adapters.common.base import BaseRestAdapter
 
     for adapter_type in BROKER_ADAPTERS.values():
         assert issubclass(adapter_type, BaseRestAdapter)
@@ -47,7 +47,7 @@ def test_registry_types_are_subclasses_of_base_adapter() -> None:
 
 @pytest.mark.parametrize("name", BROKERS)
 def test_every_adapter_builds_with_mock_transport(name: str) -> None:
-    from vyapaar_adapters.common.transport import MockTransport
+    from tantra_adapters.common.transport import MockTransport
 
     adapter_type = BROKER_ADAPTERS[name]
     adapter = adapter_type(transport=MockTransport())

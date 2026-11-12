@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from vyapaar_adapters.common.base import BaseRestAdapter
-from vyapaar_adapters.common.models import (
+from tantra_adapters.common.base import BaseRestAdapter
+from tantra_adapters.common.models import (
     Margin,
     Order,
     OrderRequest,
@@ -15,7 +15,7 @@ from vyapaar_adapters.common.models import (
     Position,
     Quote,
 )
-from vyapaar_adapters.common.parse import as_decimal
+from tantra_adapters.common.parse import as_decimal
 
 
 class FyersAdapter(BaseRestAdapter):

@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from vyapaar_adapters.common.models import (
+from tantra_adapters.common.models import (
     OrderRequest,
     OrderSide,
     OrderStatus,
     OrderType,
 )
-from vyapaar_adapters.common.transport import MockTransport
-from vyapaar_adapters.zerodha import ZerodhaAdapter
+from tantra_adapters.common.transport import MockTransport
+from tantra_adapters.zerodha import ZerodhaAdapter
 
 BASE = "https://api.kite.trade"
 

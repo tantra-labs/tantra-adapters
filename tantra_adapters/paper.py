@@ -5,8 +5,8 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
-from vyapaar_adapters.common.codec import from_plain, to_plain
-from vyapaar_adapters.common.models import (
+from tantra_adapters.common.codec import from_plain, to_plain
+from tantra_adapters.common.models import (
     Bar,
     Margin,
     Order,
@@ -16,7 +16,7 @@ from vyapaar_adapters.common.models import (
     Position,
     Quote,
 )
-from vyapaar_adapters.common.parse import as_decimal
+from tantra_adapters.common.parse import as_decimal
 
 _SEED = Decimal("100.00")
 

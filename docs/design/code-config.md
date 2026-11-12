@@ -1,6 +1,6 @@
-# `vyapaar-adapters` — Configuration Models & TOML Templates
+# `tantra-adapters` — Configuration Models & TOML Templates
 
-Documents `vyapaar_adapters/common/config.py` (pydantic configuration models)
+Documents `tantra_adapters/common/config.py` (pydantic configuration models)
 and the Zone 3 `configs/*.toml` connection templates: how a broker connection
 (paper or live) is described declaratively.
 
@@ -85,7 +85,7 @@ Missing (tracked by [gap 0007](../gaps/0007-config-templates-unpopulated.md) und
 ## Usage
 
 ```python
-from vyapaar_adapters.common.config import AdapterConfig, BrokerCredentials
+from tantra_adapters.common.config import AdapterConfig, BrokerCredentials
 
 config = AdapterConfig(
     broker="dhan",

@@ -1,6 +1,6 @@
-# `vyapaar-adapters` — Transport Layer Reference
+# `tantra-adapters` — Transport Layer Reference
 
-Documents `vyapaar_adapters/common/protocols.py`, `common/transport.py`, and
+Documents `tantra_adapters/common/protocols.py`, `common/transport.py`, and
 `common/base.py`: the transport abstraction, the production/mock HTTP
 transports, and the REST adapter skeleton every broker extends.
 
@@ -83,7 +83,7 @@ Injected-transport REST adapter skeleton shared by all seven brokers.
   `credentials` to empty `BrokerCredentials()`.
 - `connect()` / `disconnect()` — no-ops for stateless token auth; subclasses
   may override.
-- `_headers()` — `User-Agent: vyapaar-adapters/0.1.0`, `Accept` and
+- `_headers()` — `User-Agent: tantra-adapters/0.1.0`, `Accept` and
   `Content-Type` `application/json`; subclasses extend with broker auth
   headers.
 - `_get(path, params)` / `_post(path, payload)` / `_delete(path)` — delegate to

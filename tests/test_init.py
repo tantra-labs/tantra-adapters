@@ -1,5 +1,5 @@
-def test_vyapaar_adapters_import():
-    import vyapaar_adapters
+def test_tantra_adapters_import():
+    import tantra_adapters
 
-    assert vyapaar_adapters.__version__ == "0.1.0"
-    assert len(vyapaar_adapters.BROKER_ADAPTERS) == 7
+    assert tantra_adapters.__version__ == "0.1.0"
+    assert len(tantra_adapters.BROKER_ADAPTERS) == 7

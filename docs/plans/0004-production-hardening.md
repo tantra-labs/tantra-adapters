@@ -68,5 +68,5 @@ delivers the contract-certified adapters.
 
 - [Plan 0002](0002-complete-broker-contract-certification.md) — the contract
   parity this hardening applies to.
-- `vyapaar-exec` — the production execution router that consumes hardened
+- `tantra-exec` — the production execution router that consumes hardened
   adapter calls.

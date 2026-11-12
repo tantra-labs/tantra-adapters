@@ -5,13 +5,13 @@ from __future__ import annotations
 from importlib import import_module
 from importlib.metadata import entry_points
 
-from vyapaar_adapters.angelone import AngelOneAdapter
-from vyapaar_adapters.dhan import DhanAdapter
-from vyapaar_adapters.fyers import FyersAdapter
-from vyapaar_adapters.iifl import IIFLAdapter
-from vyapaar_adapters.kotak import KotakAdapter
-from vyapaar_adapters.upstox import UpstoxAdapter
-from vyapaar_adapters.zerodha import ZerodhaAdapter
+from tantra_adapters.angelone import AngelOneAdapter
+from tantra_adapters.dhan import DhanAdapter
+from tantra_adapters.fyers import FyersAdapter
+from tantra_adapters.iifl import IIFLAdapter
+from tantra_adapters.kotak import KotakAdapter
+from tantra_adapters.upstox import UpstoxAdapter
+from tantra_adapters.zerodha import ZerodhaAdapter
 
 BROKER_ADAPTERS: dict[str, type] = {
     "dhan": DhanAdapter,
@@ -25,13 +25,13 @@ BROKER_ADAPTERS: dict[str, type] = {
 
 
 def load_adapters() -> dict[str, type]:
-    """Discover adapters from ``vyapaar.adapters`` entry points.
+    """Discover adapters from ``tantra.adapters`` entry points.
 
     Falls back to the built-in registry when the package is not installed as a
     distribution (e.g. running pytest straight from the source tree).
     """
     discovered: dict[str, type] = {}
-    for ep in entry_points(group="vyapaar.adapters"):
+    for ep in entry_points(group="tantra.adapters"):
         try:
             discovered[ep.name] = ep.load()
         except Exception:

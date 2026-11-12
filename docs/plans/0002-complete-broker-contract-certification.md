@@ -39,9 +39,9 @@ streaming + TOTP headless auth. This plan collects gaps 0001–0007.
 ### Phase B — Streaming & auth (gaps 0004, 0005)
 
 1. Add a `WebSocketTransport` protocol + per-broker WebSocket adapters in
-   `vyapaar_adapters/common/protocols.py` and per-broker modules.
+   `tantra_adapters/common/protocols.py` and per-broker modules.
 2. Add `subscribe_ticks(instruments, callback)` to the `Adapter` protocol.
-3. Add `vyapaar_adapters/common/auth.py` with TOTP generation and per-broker
+3. Add `tantra_adapters/common/auth.py` with TOTP generation and per-broker
    `login()`/`authenticate()` flows.
 4. Add token-refresh logic (expiry tracking, refresh before 401).
 5. Add offline contract tests with an in-memory async mock WebSocket.
@@ -89,8 +89,8 @@ Non-correctness items surfaced during the 2026-11-12 documentation pass:
 ## 4. Related
 
 - [Plan 0003](0003-cross-repo-integration.md): cross-repo wiring of these
-  contracts into `vyapaar-market` / `vyapaar-exec` / `vyapaar-ledger`.
+  contracts into `tantra-market` / `tantra-exec` / `tantra-ledger`.
 - [Plan 0004](0004-production-hardening.md): rate limits, pooling, token
   refresh, tracing, benchmark/fuzz hardening on top of this plan.
-- `vyapaar-market` (Rust): canonical `Tick`/`Bar` models; the Python WebSocket
+- `tantra-market` (Rust): canonical `Tick`/`Bar` models; the Python WebSocket
   layer (Phase B) should mirror those contracts.

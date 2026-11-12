@@ -1,6 +1,6 @@
-# `vyapaar-adapters` — Fixture Codec Reference
+# `tantra-adapters` — Fixture Codec Reference
 
-Documents `vyapaar_adapters/common/codec.py` and `vyapaar_adapters/common/fixtures.py`:
+Documents `tantra_adapters/common/codec.py` and `tantra_adapters/common/fixtures.py`:
 the lossless encode/decode pair and the JSONL persistence used by
 `RecordingAdapter`/`ReplayingAdapter` (see `code-paper.md` for the harness around them).
 

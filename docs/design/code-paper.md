@@ -1,6 +1,6 @@
-# `vyapaar-adapters` — Paper Broker, Fixture Recording & Replay Reference
+# `tantra-adapters` — Paper Broker, Fixture Recording & Replay Reference
 
-Documents `vyapaar_adapters/paper.py`, `common/codec.py`, and
+Documents `tantra_adapters/paper.py`, `common/codec.py`, and
 `common/fixtures.py`: the deterministic offline broker simulation and the JSONL
 fixture machinery used for offline contract testing.
 

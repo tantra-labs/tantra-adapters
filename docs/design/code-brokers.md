@@ -1,8 +1,8 @@
-# `vyapaar-adapters` — Per-Broker Adapter Reference
+# `tantra-adapters` — Per-Broker Adapter Reference
 
-Documents the seven broker adapter modules in `vyapaar_adapters/`. Every
+Documents the seven broker adapter modules in `tantra_adapters/`. Every
 adapter extends `BaseRestAdapter` and translates broker wire payloads into
-canonical Vyapaar models (`Quote`, `Bar`, `Order`, `Position`, `Margin`). All
+canonical Tantra models (`Quote`, `Bar`, `Order`, `Position`, `Margin`). All
 financial values are exact `decimal.Decimal`.
 
 ## Common Instrument Format

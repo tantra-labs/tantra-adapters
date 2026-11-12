@@ -30,7 +30,7 @@ Partially addressed since this gap was filed. Current verified state:
 
 What's missing beyond the templates:
 
-- **No config loader**: `AdapterConfig` (`vyapaar_adapters/common/config.py`)
+- **No config loader**: `AdapterConfig` (`tantra_adapters/common/config.py`)
   is a pydantic model that *could* be loaded from a `.toml` file, but there is
   no `AdapterConfig.from_toml(path)` / `load_config` helper, no example of
   parsing a template in code, and no CI check that templates parse.

@@ -1,4 +1,4 @@
-# `vyapaar-adapters` Agent Guidelines & Architecture Invariants
+# `tantra-adapters` Agent Guidelines & Architecture Invariants
 
 **Subsystem**: Adapters (Broker REST & WebSocket Python Adapters)
 **Language**: Python
@@ -7,7 +7,7 @@
 ---
 
 ## 1. Role & Architectural Hints
-* `vyapaar-adapters` implements broker-specific communication protocols:
+* `tantra-adapters` implements broker-specific communication protocols:
   1. Standardizes broker API responses into canonical types (`Bar`, `Order`, `Position`, `Margin`).
   2. Headless authentication support (TOTP).
   3. Paper-trading mock harnesses with fixture recording for deterministic CI testing.

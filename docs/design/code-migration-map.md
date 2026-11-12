@@ -1,4 +1,4 @@
-# `vyapaar-adapters` — Implementation Record (honba-adapters → vyapaar-adapters)
+# `tantra-adapters` — Implementation Record (honba-adapters → tantra-adapters)
 
 > **Tier**: Tier 6B — Broker ACL / Connectors
 > **Status**: Implemented in commit `45962a3` (`feat(adapters): implement Tier 6B
@@ -18,11 +18,11 @@ transport abstraction, and broker wire mappings described in
 - Removed the invalid `"rust_decimal>=1.0.0"` dependency (Rust decimal is not a
   Python package; the zero-floats invariant is enforced in pure Python by
   `decimal.Decimal`).
-- Declared `vyapaar` and `pydantic` as runtime dependencies.
-- Configured `[project.entry-points."vyapaar.adapters"]` for `dhan`, `zerodha`,
+- Declared `tantra` and `pydantic` as runtime dependencies.
+- Configured `[project.entry-points."tantra.adapters"]` for `dhan`, `zerodha`,
   `angelone`, `upstox`, `fyers`, `kotak`, `iifl`.
 
-### 2. Implement the Package (`vyapaar_adapters/`)
+### 2. Implement the Package (`tantra_adapters/`)
 
 - `common/` — canonical models + enums, strict `Decimal` parsing (floats
   rejected), `HttpTransport`/`Adapter` protocols, `UrllibTransport` (JSON
@@ -32,9 +32,9 @@ transport abstraction, and broker wire mappings described in
 - Broker modules for all seven brokers, each translating wire fields to
   canonical models.
 - `paper.py` — deterministic `PaperBroker` + `RecordingAdapter`/`ReplayingAdapter`.
-- `registry.py` — `vyapaar.adapters` entry-point discovery with a built-in
+- `registry.py` — `tantra.adapters` entry-point discovery with a built-in
   fallback registry.
-- `_compat.py` — optional `vyapaar` native-wheel fallback (`VYAAPAAR_AVAILABLE`).
+- `_compat.py` — optional `tantra` native-wheel fallback (`VYAAPAAR_AVAILABLE`).
 
 ### 3. Add Tests, Configs, Examples & Tooling
 
@@ -56,7 +56,7 @@ transport abstraction, and broker wire mappings described in
   `float`); `as_decimal` raises `TypeError` on floats.
 - **Boundary settlement**: the Python/Rust adapter boundary (which layer owns
   broker I/O) is settled by plan 0001 (see `docs/plans/README.md`) — Python
-  adapters are for development/research; the Rust `vyapaar-market`/`vyapaar-exec`
+  adapters are for development/research; the Rust `tantra-market`/`tantra-exec`
   path is production.
 
 ## Verification

@@ -1,8 +1,8 @@
 """Common canonical models shared by every broker adapter."""
 
-from vyapaar_adapters.common.config import AdapterConfig, BrokerCredentials
-from vyapaar_adapters.common.fixtures import load_fixture, record_fixture
-from vyapaar_adapters.common.models import (
+from tantra_adapters.common.config import AdapterConfig, BrokerCredentials
+from tantra_adapters.common.fixtures import load_fixture, record_fixture
+from tantra_adapters.common.models import (
     Bar,
     Margin,
     Order,
@@ -15,13 +15,13 @@ from vyapaar_adapters.common.models import (
     Quote,
     TimeInForce,
 )
-from vyapaar_adapters.common.parse import (
+from tantra_adapters.common.parse import (
     as_decimal,
     as_iso_ts,
     non_negative_decimal,
 )
-from vyapaar_adapters.common.protocols import Adapter, HttpTransport
-from vyapaar_adapters.common.transport import MockTransport, UrllibTransport
+from tantra_adapters.common.protocols import Adapter, HttpTransport
+from tantra_adapters.common.transport import MockTransport, UrllibTransport
 
 __all__ = [
     "Adapter",

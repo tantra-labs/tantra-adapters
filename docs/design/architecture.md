@@ -1,9 +1,9 @@
-# `vyapaar-adapters` — DDD Architecture & Python Broker ACL SDK
+# `tantra-adapters` — DDD Architecture & Python Broker ACL SDK
 
 ## 1. Bounded Context & Responsibility
 
-`vyapaar-adapters` (Tier 6B — Broker ACL / Connectors) is the pluggable Python
-**Anti-Corruption Layer (ACL)** between Vyapaar's canonical domain and the wire
+`tantra-adapters` (Tier 6B — Broker ACL / Connectors) is the pluggable Python
+**Anti-Corruption Layer (ACL)** between Tantra's canonical domain and the wire
 formats of Indian brokers:
 
 | Broker | Adapter | Broker API |
@@ -25,7 +25,7 @@ never leak outward; adapters translate into and out of canonical types only.
 
 | Zone | Path | Contents |
 |------|------|----------|
-| Zone 1 | `vyapaar_adapters/` | Unified pip-installable package: `common/`, seven broker modules, `paper.py`, `registry.py` |
+| Zone 1 | `tantra_adapters/` | Unified pip-installable package: `common/`, seven broker modules, `paper.py`, `registry.py` |
 | Zone 2 | `tests/` | Offline contract certification suite (`MockTransport` canned payloads, paper/replay/registry/common-model tests) |
 | Zone 3 | `configs/` | Paper + live `.toml` connection templates (`paper.toml`, `dhan.toml`, `zerodha.toml`) |
 | Zone 4 | `examples/` & `scripts/` | Fixture recorders and smoke-test runners |
@@ -47,9 +47,9 @@ All financial fields are `decimal.Decimal`; timestamps are `datetime`
 ## 4. Module Map
 
 ```
-vyapaar_adapters/
+tantra_adapters/
 ├── __init__.py          # Public API surface + version
-├── _compat.py           # Optional `vyapaar` native wheel fallback
+├── _compat.py           # Optional `tantra` native wheel fallback
 ├── paper.py             # PaperBroker, RecordingAdapter, ReplayingAdapter
 ├── registry.py          # Entry-point discovery + built-in fallback registry
 ├── dhan.py              # DhanHQ v2 REST adapter
@@ -87,7 +87,7 @@ one per module, mirroring the per-crate convention used across the workspace):
 | `registry.py` | [code-registry.md](code-registry.md) |
 | the seven broker modules | [code-brokers.md](code-brokers.md) |
 | `__init__.py`, `common/__init__.py`, `_compat.py` | [code-public-api.md](code-public-api.md) |
-| historical honba-adapters → vyapaar-adapters migration | [code-migration-map.md](code-migration-map.md) |
+| historical honba-adapters → tantra-adapters migration | [code-migration-map.md](code-migration-map.md) |
 
 ## 6. Design Principles
 
@@ -140,8 +140,8 @@ make check     # lint + format-check + pytest
   OHLCV history, parsed `cancel_order`, WebSocket streaming, TOTP auth, richer
   `PaperBroker`, remaining config templates + loader → [plan 0002](../plans/0002-complete-broker-contract-certification.md),
   gaps [0001–0007](../gaps/README.md).
-- **Cross-repo integration** — align canonical models with `vyapaar-market`
-  (Rust), wire adapters into `vyapaar-exec`, feed `vyapaar-market` indicators,
+- **Cross-repo integration** — align canonical models with `tantra-market`
+  (Rust), wire adapters into `tantra-exec`, feed `tantra-market` indicators,
   end-to-end fixture → adapter → OMS → ledger test → [plan 0003](../plans/0003-cross-repo-integration.md).
 - **Production hardening** — rate-limit handling, connection pooling/keep-alive,
   token refresh, structured logging/tracing, benchmark + fuzz → [plan 0004](../plans/0004-production-hardening.md).

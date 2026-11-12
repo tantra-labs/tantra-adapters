@@ -13,7 +13,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any
 
-from vyapaar_adapters.common import models as _models
+from tantra_adapters.common import models as _models
 
 _MODEL_TYPES: dict[str, type] = {
     "Quote": _models.Quote,

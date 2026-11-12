@@ -1,14 +1,14 @@
-# `vyapaar-adapters` — Public API Surface Reference
+# `tantra-adapters` — Public API Surface Reference
 
-Documents the package entry points: `vyapaar_adapters/__init__.py`,
-`vyapaar_adapters/common/__init__.py`, and `vyapaar_adapters/_compat.py`.
+Documents the package entry points: `tantra_adapters/__init__.py`,
+`tantra_adapters/common/__init__.py`, and `tantra_adapters/_compat.py`.
 
-## `vyapaar_adapters` (top level)
+## `tantra_adapters` (top level)
 
 `__version__ = "0.1.0"`; imports are deliberately shallow — the top level exposes only
 canonical models, the paper harness, and the registry. Broker modules are
 **not** re-exported; users import them explicitly
-(`from vyapaar_adapters.dhan import DhanAdapter`) or discover via
+(`from tantra_adapters.dhan import DhanAdapter`) or discover via
 `load_adapters()` to keep startup free of broker imports.
 
 | Export | Kind | Source |
@@ -19,7 +19,7 @@ canonical models, the paper harness, and the registry. Broker modules are
 | `BROKER_ADAPTERS`, `load_adapters` | registry | `registry` |
 | `VYAAPAAR_AVAILABLE` | `bool` | `_compat` |
 
-## `vyapaar_adapters.common`
+## `tantra_adapters.common`
 
 The shared-primitives namespace; re-exports everything an adapter author or test
 needs in one import:
@@ -40,15 +40,15 @@ their modules directly.
 
 ## `_compat.py` — Optional Native Wheel Fallback
 
-The `vyapaar` PyPI wheel (Rust core via PyO3) is declared in `pyproject.toml`
+The `tantra` PyPI wheel (Rust core via PyO3) is declared in `pyproject.toml`
 dependencies but is **optional at runtime**:
 
 ```python
 try:  # exercised only when the native wheel is absent
-    from vyapaar import Decimal as VyapaarDecimal
+    from tantra import Decimal as TantraDecimal
     VYAAPAAR_AVAILABLE = True
 except ImportError:
-    VyapaarDecimal = Decimal
+    TantraDecimal = Decimal
     VYAAPAAR_AVAILABLE = False
 
 D = Decimal

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from vyapaar_adapters.common.config import BrokerCredentials
-from vyapaar_adapters.common.protocols import HttpTransport
-from vyapaar_adapters.common.transport import UrllibTransport
+from tantra_adapters.common.config import BrokerCredentials
+from tantra_adapters.common.protocols import HttpTransport
+from tantra_adapters.common.transport import UrllibTransport
 
 
 class BaseRestAdapter:
@@ -38,7 +38,7 @@ class BaseRestAdapter:
 
     def _headers(self) -> dict[str, str]:
         return {
-            "User-Agent": "vyapaar-adapters/0.1.0",
+            "User-Agent": "tantra-adapters/0.1.0",
             "Accept": "application/json",
             "Content-Type": "application/json",
         }

@@ -8,11 +8,11 @@ Only `dhan` (`tests/test_dhan.py`) and `zerodha` (`tests/test_zerodha.py`) have
 canned-payload contract tests against `MockTransport`. The remaining five broker
 adapters have **zero** contract tests:
 
-- `angelone` (`vyapaar_adapters/angelone.py`)
-- `upstox` (`vyapaar_adapters/upstox.py`)
-- `fyers` (`vyapaar_adapters/fyers.py`)
-- `kotak` (`vyapaar_adapters/kotak.py`)
-- `iifl` (`vyapaar_adapters/iifl.py`)
+- `angelone` (`tantra_adapters/angelone.py`)
+- `upstox` (`tantra_adapters/upstox.py`)
+- `fyers` (`tantra_adapters/fyers.py`)
+- `kotak` (`tantra_adapters/kotak.py`)
+- `iifl` (`tantra_adapters/iifl.py`)
 
 `tests/test_registry.py` only proves these five **build** with `MockTransport`
 (connect + disconnect); no wire→canonical translation is exercised. Field
@@ -24,7 +24,7 @@ and Decimal parsing of broker numeric strings are all untested.
 
 The adapters are an Anti-Corruption Layer (ACL). A mistranslated field silently
 corrupts canonical `Order`, `Position`, `Margin`, or `Quote` values downstream
-in `vyapaar-ledger`, `vyapaar-risk`, and strategy code. Contract tests are the
+in `tantra-ledger`, `tantra-risk`, and strategy code. Contract tests are the
 gate that catches this before it reaches production.
 
 ## How to Close It

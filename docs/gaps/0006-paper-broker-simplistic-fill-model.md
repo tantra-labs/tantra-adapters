@@ -4,7 +4,7 @@
 
 ## What's Simplistic
 
-`PaperBroker` (`vyapaar_adapters/paper.py`) simulates fills against a single
+`PaperBroker` (`tantra_adapters/paper.py`) simulates fills against a single
 quote price:
 
 - Market orders fill immediately at `quote.last_price`.

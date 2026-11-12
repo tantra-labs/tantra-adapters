@@ -1,9 +1,9 @@
-# `vyapaar-adapters` — Canonical Models & Strict Parsing Reference
+# `tantra-adapters` — Canonical Models & Strict Parsing Reference
 
-Documents `vyapaar_adapters/common/models.py` (canonical broker-agnostic models
-and enums) and `vyapaar_adapters/common/parse.py` (strict decimal/timestamp
+Documents `tantra_adapters/common/models.py` (canonical broker-agnostic models
+and enums) and `tantra_adapters/common/parse.py` (strict decimal/timestamp
 parsing). Every financial field is an exact `decimal.Decimal`; enums use the
-Vyapaar Ubiquitous Language.
+Tantra Ubiquitous Language.
 
 ## Enums (`common/models.py`)
 

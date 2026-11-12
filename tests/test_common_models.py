@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from vyapaar_adapters.common.models import (
+from tantra_adapters.common.models import (
     Bar,
     Margin,
     Order,

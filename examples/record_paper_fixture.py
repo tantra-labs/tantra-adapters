@@ -9,8 +9,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from vyapaar_adapters import OrderRequest, OrderSide, OrderType, PaperBroker, RecordingAdapter
-from vyapaar_adapters.common.fixtures import record_fixture
+from tantra_adapters import OrderRequest, OrderSide, OrderType, PaperBroker, RecordingAdapter
+from tantra_adapters.common.fixtures import record_fixture
 
 
 def main() -> None:
