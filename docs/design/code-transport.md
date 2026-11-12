@@ -1,14 +1,16 @@
 # `vyapaar-adapters` — Transport Layer Reference
 
-Documents `vyapaar_adapters/common/protocols.py` and `vyapaar_adapters/common/transport.py`:
-the transport abstraction and the production/mock HTTP transports.
+Documents `vyapaar_adapters/common/protocols.py`, `common/transport.py`, and
+`common/base.py`: the transport abstraction, the production/mock HTTP
+transports, and the REST adapter skeleton every broker extends.
 
 ## Protocols (`common/protocols.py`)
 
 ### `HttpTransport` (`@runtime_checkable Protocol`)
 
-Minimal HTTP abstraction injected into every broker adapter. Transport-agnostic so
-production (`UrllibTransport`) and tests (`MockTransport`) are interchangeable.
+Minimal HTTP abstraction injected into every broker adapter. Transport-agnostic
+so production (`UrllibTransport`) and tests (`MockTransport`) are
+interchangeable.
 
 ```python
 class HttpTransport(Protocol):
@@ -40,27 +42,32 @@ class Adapter(Protocol):
     def get_margin(self) -> Any: ...
 ```
 
+REST-only today; streaming is tracked by [gap 0004](../gaps/0004-no-websocket-streaming.md).
+
 ## Transports (`common/transport.py`)
 
 ### `UrllibTransport`
 
-Standard-library HTTP transport (no external dependencies). Default for production.
+Standard-library HTTP transport (no external dependencies); the production
+default.
 
-- JSON payloads are encoded with `json.dumps`.
+- Constructor: `UrllibTransport(timeout: float = 15.0)`.
+- `params` are URL-encoded onto the URL; `payload` is serialized with
+  `json.dumps`.
 - JSON responses are decoded with `parse_float=Decimal` — broker numbers become
   `Decimal`, never `float`.
-- `HTTPError` is caught and returned as `(exc.code, body)` so `_raise_for_status` can
-  raise `BrokerApiError`.
-- Constructor: `UrllibTransport(timeout: float = 15.0)`.
+- `urllib.error.HTTPError` is caught and returned as `(exc.code, body)` so
+  `_raise_for_status` can raise `BrokerApiError`.
 
 ### `MockTransport`
 
-Deterministic transport serving canned responses from a URL map. Used by contract
-tests.
+Deterministic transport serving canned responses from a URL map; used by
+contract tests.
 
 - Constructor: `MockTransport(responses: dict[str, tuple[int, Any]] | None = None)`.
-- `request(method, url, ...)` records `(key, url, payload)` in `history` and returns
-  the canned response for `"{METHOD} {url}"`; raises `KeyError` if no canned response.
+- `request(method, url, ...)` records `(key, url, payload)` in `history` and
+  returns the canned response for `"{METHOD} {url}"`; raises `KeyError` if no
+  canned response is registered.
 - `add(method, url, response)` registers a canned response.
 
 ## Base Adapter (`common/base.py`)
@@ -69,25 +76,30 @@ tests.
 
 Injected-transport REST adapter skeleton shared by all seven brokers.
 
-- `__init__(transport, base_url, credentials)` — `transport` defaults to
-  `UrllibTransport`; `base_url` defaults to `default_base_url`; `credentials` defaults
-  to empty `BrokerCredentials`.
-- `_headers()` — returns `User-Agent`, `Accept`, `Content-Type` JSON headers; subclasses
-  extend with broker auth headers.
+- `default_base_url = "https://api.example.invalid"` — each broker overrides
+  with its real endpoint.
+- `__init__(transport=None, base_url=None, credentials=None)` — `transport`
+  defaults to `UrllibTransport()`, `base_url` to `default_base_url`,
+  `credentials` to empty `BrokerCredentials()`.
+- `connect()` / `disconnect()` — no-ops for stateless token auth; subclasses
+  may override.
+- `_headers()` — `User-Agent: vyapaar-adapters/0.1.0`, `Accept` and
+  `Content-Type` `application/json`; subclasses extend with broker auth
+  headers.
 - `_get(path, params)` / `_post(path, payload)` / `_delete(path)` — delegate to
   `transport.request` and call `_raise_for_status`.
-- `_raise_for_status(status, body)` — raises `BrokerApiError(status, detail)` when
-  `status >= 400`.
-- `connect()` / `disconnect()` — no-op for stateless token auth; subclasses may
-  override.
+- `_raise_for_status(status, body)` — raises `BrokerApiError(status, detail)`
+  when `status >= 400`.
 
 ### `BrokerApiError`
 
 `RuntimeError` subclass carrying `status` and `detail`; raised on HTTP ≥400.
+Message format: `broker API error {status}: {detail!r}`.
 
 ## Zero-Floats Note
 
-`UrllibTransport` decodes JSON with `parse_float=Decimal`, so a broker response like
-`{"ltp": "24567.80"}` or `{"ltp": 24567.80}` yields `Decimal("24567.80")` — never
-binary `float`. Combined with `as_decimal` rejecting `float` inputs, no float reaches
+`UrllibTransport` decodes JSON with `parse_float=Decimal`, so a broker response
+like `{"ltp": "24567.80"}` or `{"ltp": 24567.80}` yields
+`Decimal("24567.80")` — never binary `float`. Combined with `as_decimal`
+rejecting `float` inputs (see [code-models](code-models.md)), no float reaches
 a financial field.

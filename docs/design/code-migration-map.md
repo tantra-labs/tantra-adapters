@@ -1,41 +1,75 @@
-# `vyapaar-adapters` — Historical Migration Map (honba-adapters → vyapaar-adapters)
+# `vyapaar-adapters` — Implementation Record (honba-adapters → vyapaar-adapters)
 
-> **Tier**: Tier 6B
-> **Source**: `/home/pmallapp/Devel/Finance/honba-workspace/honba-adapters`
-> **Target**: `/home/pmallapp/Devel/Finance/vyapaar-labs/vyapaar-adapters`
-> **Status**: Migration complete.
+> **Tier**: Tier 6B — Broker ACL / Connectors
+> **Status**: Implemented in commit `45962a3` (`feat(adapters): implement Tier 6B
+> broker ACL SDK with entry points`).
 
-## Migration & DDD Refactoring Steps
+This document records how the Tier 6B broker ACL SDK came to exist in this
+workspace and the corrections applied during implementation. The `honba-adapters`
+source tree was **not present** in this environment, so the package was
+implemented **fresh** against the Tier 6B contract (the canonical models,
+transport abstraction, and broker wire mappings described in
+[code-brokers](code-brokers.md)), rather than copied file-for-file.
+
+## Implementation Steps
 
 ### 1. Fix `pyproject.toml`
 
-- Remove invalid `"rust_decimal>=1.0.0"` from `vyapaar-adapters/pyproject.toml`.
-- Configure `[project.entry-points."vyapaar.adapters"]` for `dhan`, `zerodha`, `angelone`, `upstox`, `fyers`, `kotak`, `iifl`.
+- Removed the invalid `"rust_decimal>=1.0.0"` dependency (Rust decimal is not a
+  Python package; the zero-floats invariant is enforced in pure Python by
+  `decimal.Decimal`).
+- Declared `vyapaar` and `pydantic` as runtime dependencies.
+- Configured `[project.entry-points."vyapaar.adapters"]` for `dhan`, `zerodha`,
+  `angelone`, `upstox`, `fyers`, `kotak`, `iifl`.
 
-### 2. Port Source Code
+### 2. Implement the Package (`vyapaar_adapters/`)
 
-- Copy `honba-workspace/honba-adapters/src/honba_adapters/*` and `src/honba_adapters_shared/*` into `vyapaar-labs/vyapaar-adapters/vyapaar_adapters/`.
-- Do **NOT** copy `.egg-info` or `__pycache__` directories.
-- Replace `honba_adapters` → `vyapaar_adapters` and `honba` → `vyapaar`.
+- `common/` — canonical models + enums, strict `Decimal` parsing (floats
+  rejected), `HttpTransport`/`Adapter` protocols, `UrllibTransport` (JSON
+  decoded with `parse_float=Decimal`) + `MockTransport`, `BaseRestAdapter`,
+  pydantic `AdapterConfig`/`BrokerCredentials`, lossless fixture codec and
+  JSONL fixture persistence.
+- Broker modules for all seven brokers, each translating wire fields to
+  canonical models.
+- `paper.py` — deterministic `PaperBroker` + `RecordingAdapter`/`ReplayingAdapter`.
+- `registry.py` — `vyapaar.adapters` entry-point discovery with a built-in
+  fallback registry.
+- `_compat.py` — optional `vyapaar` native-wheel fallback (`VYAAPAAR_AVAILABLE`).
 
-### 3. Port Tests, Configs & Examples
+### 3. Add Tests, Configs, Examples & Tooling
 
-- Copy `tests/`, `configs/`, `examples/`, `scripts/`, and `Makefile` from `honba-adapters`, updating imports to `vyapaar_adapters`.
+- `tests/` — offline contract certification: `test_dhan.py`, `test_zerodha.py`
+  (canned-payload contract tests), `test_common_models.py`, `test_paper.py`,
+  `test_replay.py`, `test_parse.py`, `test_registry.py`, `test_init.py`.
+- `configs/` — `paper.toml`, `dhan.toml`, `zerodha.toml` + `README.md`
+  (see [code-config](code-config.md)).
+- `examples/` — `record_paper_fixture.py`; `scripts/` — `smoke_adapters.py`.
+- `Makefile`, `.github/workflows/ci.yml`, `.agents/HANDOFF.md`.
 
-## Verification Commands
+## Decisions & Corrections
+
+- **`json` shadowing bug**: a transport method parameter named `json` shadowed
+  the `json` module; renamed to `payload` across the transport protocol and all
+  call sites.
+- **Dhan position netting**: `quantity = buyQty - sellQty` (long positive).
+- **Zero-floats invariant**: broker JSON numbers decode as `Decimal` (never
+  `float`); `as_decimal` raises `TypeError` on floats.
+- **Boundary settlement**: the Python/Rust adapter boundary (which layer owns
+  broker I/O) is settled by plan 0001 (see `docs/plans/README.md`) — Python
+  adapters are for development/research; the Rust `vyapaar-market`/`vyapaar-exec`
+  path is production.
+
+## Verification
 
 ```bash
-cd /home/pmallapp/Devel/Finance/vyapaar-labs/vyapaar-adapters
-pytest -q
-ruff check .
+cd /project1/vyapaar-labs/vyapaar-adapters
+make check    # ruff check . && ruff format --check . && python -m pytest -q
 ```
 
-## Migration Milestone Status
+`pytest -q`, `ruff check .`, `ruff format --check .` all pass.
 
-| Milestone | Status |
-|-----------|--------|
-| `pyproject.toml` fixed (entry points configured, `rust_decimal` removed) | Complete |
-| Source code ported (`vyapaar_adapters/` package) | Complete |
-| Tests, configs, examples, scripts ported | Complete |
-| `pytest -q` | Passing |
-| `ruff check .` | Clean |
+## Remaining Work
+
+See [gaps](../gaps/README.md) (0001–0007, tracked by [plan 0002](../plans/0002-complete-broker-contract-certification.md)),
+[plan 0003](../plans/0003-cross-repo-integration.md), and
+[plan 0004](../plans/0004-production-hardening.md).

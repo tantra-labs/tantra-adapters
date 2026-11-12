@@ -1,12 +1,13 @@
 # `vyapaar-adapters` — Adapter Registry Reference
 
-Documents `vyapaar_adapters/registry.py`: entry-point discovery with a deterministic
-fallback, plus the built-in `BROKER_ADAPTERS` registry.
+Documents `vyapaar_adapters/registry.py`: entry-point discovery with a
+deterministic fallback, plus the built-in `BROKER_ADAPTERS` registry.
 
 ## `BROKER_ADAPTERS`
 
-Hard-coded mapping of broker name → adapter class, used as the fallback when the
-package is not installed as a distribution:
+Hard-coded mapping of broker name → adapter class, used as the fallback when
+the package is not installed as a distribution (e.g. running pytest straight
+from the source tree):
 
 | Broker | Adapter Class | Module |
 |--------|---------------|--------|
@@ -37,10 +38,10 @@ iifl = "vyapaar_adapters.iifl:IIFLAdapter"
 ```
 
 Behavior:
+
 1. Iterates `entry_points(group="vyapaar.adapters")` and loads each.
 2. Falls back to importing `ep.value` (`module:attr`) if entry-point load fails.
-3. If nothing is discovered (e.g. running pytest straight from the source tree
-   without `pip install -e .`), returns `dict(BROKER_ADAPTERS)`.
+3. If nothing is discovered, returns `dict(BROKER_ADAPTERS)`.
 
 Returns `dict[str, type]` — broker name → adapter class.
 
@@ -57,8 +58,10 @@ dhan = adapters["dhan"](transport=MockTransport(), ...)
 
 Entry points in `pyproject.toml` must stay in sync with `BROKER_ADAPTERS`.
 `tests/test_registry.py` asserts:
-- `set(BROKER_ADAPTERS) == {dhan, zerodha, angelone, upstox, fyers, kotak, iifl}`
-- `load_adapters()` returns all seven
-- every entry-point value starts with `vyapaar_adapters.`
-- every adapter type subclasses `BaseRestAdapter`
-- every adapter builds with `MockTransport`
+
+- `set(BROKER_ADAPTERS) == {dhan, zerodha, angelone, upstox, fyers, kotak, iifl}`.
+- `load_adapters()` returns all seven brokers.
+- `pyproject.toml` declares every `vyapaar.adapters` entry point, each value
+  starting with `vyapaar_adapters.`.
+- every adapter type subclasses `BaseRestAdapter`.
+- every adapter builds with `MockTransport` (connect + disconnect).

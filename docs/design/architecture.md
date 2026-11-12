@@ -2,40 +2,49 @@
 
 ## 1. Bounded Context & Responsibility
 
-`vyapaar-adapters` (Tier 6B) is the pluggable Python **Anti-Corruption Layer (ACL)**
-between Vyapaar's canonical domain and the wire formats of Indian brokers
-(Dhan, Zerodha Kite, Angel One SmartAPI, Upstox, Fyers, Kotak Neo, IIFL Trade
-Smart).
+`vyapaar-adapters` (Tier 6B — Broker ACL / Connectors) is the pluggable Python
+**Anti-Corruption Layer (ACL)** between Vyapaar's canonical domain and the wire
+formats of Indian brokers:
 
-Every broker payload is translated into canonical types (`Bar`, `Order`, `Position`,
-`Margin`, `Quote`) as exact `decimal.Decimal` values — **no `float` ever crosses the
-boundary**. Broker-specific structures never leak outward; adapters translate into and
-out of canonical types only.
+| Broker | Adapter | Broker API |
+|--------|---------|------------|
+| Dhan | `dhan.DhanAdapter` | DhanHQ v2 REST |
+| Zerodha | `zerodha.ZerodhaAdapter` | Kite Connect REST |
+| Angel One | `angelone.AngelOneAdapter` | SmartAPI REST |
+| Upstox | `upstox.UpstoxAdapter` | Upstox v2 REST |
+| Fyers | `fyers.FyersAdapter` | Fyers v3 REST |
+| Kotak | `kotak.KotakAdapter` | Kotak Neo REST |
+| IIFL | `iifl.IIFLAdapter` | IIFL Markets / Trade Smart REST |
+
+Every broker payload is translated into canonical types (`Quote`, `Bar`,
+`Order`, `OrderRequest`, `Position`, `Margin`) as exact `decimal.Decimal`
+values — **no `float` ever crosses the boundary**. Broker-specific structures
+never leak outward; adapters translate into and out of canonical types only.
 
 ## 2. 4-Zone Clean Packaging Architecture
 
 | Zone | Path | Contents |
 |------|------|----------|
-| Zone 1 | `vyapaar_adapters/` | Unified pip-installable package: `common/`, `dhan/`, `zerodha/`, `angelone/`, `upstox/`, `fyers/`, `kotak/`, `iifl/` |
-| Zone 2 | `tests/` | Offline contract certification suite (`MockTransport` canned payloads) |
-| Zone 3 | `configs/` | Paper and live `.toml` connection templates |
-| Zone 4 | `scripts/` & `examples/` | Fixture recorders and smoke-test runners |
+| Zone 1 | `vyapaar_adapters/` | Unified pip-installable package: `common/`, seven broker modules, `paper.py`, `registry.py` |
+| Zone 2 | `tests/` | Offline contract certification suite (`MockTransport` canned payloads, paper/replay/registry/common-model tests) |
+| Zone 3 | `configs/` | Paper + live `.toml` connection templates (`paper.toml`, `dhan.toml`, `zerodha.toml`) |
+| Zone 4 | `examples/` & `scripts/` | Fixture recorders and smoke-test runners |
 
 ## 3. Canonical Ubiquitous Language
 
 | Concept | Type | Values |
 |---------|------|--------|
-| `OrderSide` | `StrEnum` | `BUY`, `SELL` |
-| `OrderType` | `StrEnum` | `LIMIT`, `MARKET`, `STOP_LIMIT`, `STOP_MARKET` |
-| `TimeInForce` | `StrEnum` | `DAY`, `IOC`, `GTD` |
-| `ProductType` | `StrEnum` | `DELIVERY`, `INTRADAY`, `MARGIN`, `COVER_ORDER`, `BRACKET_ORDER` |
-| `OrderStatus` | `StrEnum` | `PENDING`, `OPEN`, `PARTIALLY_FILLED`, `COMPLETE`, `REJECTED`, `CANCELLED` |
+| `OrderSide` | `StrEnum` | `buy`, `sell` |
+| `OrderType` | `StrEnum` | `limit`, `market`, `stop_limit`, `stop_market` |
+| `TimeInForce` | `StrEnum` | `day`, `ioc`, `gtd` |
+| `ProductType` | `StrEnum` | `delivery`, `intraday`, `margin`, `cover_order`, `bracket_order` |
+| `OrderStatus` | `StrEnum` | `pending`, `open`, `partially_filled`, `complete`, `rejected`, `cancelled` |
 
-All financial fields are `decimal.Decimal`; timestamps are `datetime` (UTC); instruments
-are canonical `<EXCHANGE>:<SYMBOL>` strings (e.g. `NSE:RELIANCE-EQ`,
-`NFO:NIFTY24DEC24000CE`).
+All financial fields are `decimal.Decimal`; timestamps are `datetime`
+(normalized to UTC); instruments are canonical `<EXCHANGE>:<SYMBOL>` strings
+(e.g. `NSE:RELIANCE-EQ`, `NFO:NIFTY24DEC24000CE`).
 
-## 4. Module Overview
+## 4. Module Map
 
 ```
 vyapaar_adapters/
@@ -62,15 +71,69 @@ vyapaar_adapters/
     └── transport.py     # UrllibTransport (parse_float=Decimal) + MockTransport
 ```
 
+Reference docs:
+
+- [code-models](code-models.md) — canonical models, enums, strict parsing.
+- [code-transport](code-transport.md) — `HttpTransport`/`Adapter` protocols, transports, `BaseRestAdapter`.
+- [code-config](code-config.md) — pydantic config models + `configs/*.toml` templates.
+- [code-paper](code-paper.md) — `PaperBroker`, recording/replay, JSONL fixtures.
+- [code-registry](code-registry.md) — entry-point discovery + fallback registry.
+- [code-brokers](code-brokers.md) — per-broker wire mappings.
+- [code-migration-map](code-migration-map.md) — Tier 6B implementation record.
+
 ## 5. Design Principles
 
 - **Interface-first**: `Adapter` and `HttpTransport` are `runtime_checkable`
   `Protocol`s; adapters depend on abstractions, not concrete transports.
 - **Dependency inversion**: `BaseRestAdapter` accepts an injected `HttpTransport`;
   production uses `UrllibTransport`, tests inject `MockTransport`.
-- **Zero floats**: `as_decimal` raises `TypeError` on `float`; the transport decodes
-  JSON numbers with `parse_float=Decimal`.
-- **Deterministic offline testing**: `MockTransport` + `RecordingAdapter`/`ReplayingAdapter`
-  + JSONL fixtures make CI fully deterministic without live credentials.
-- **Broker agnostic core**: `common/` knows nothing about a specific broker; each
-  broker module only maps its wire fields to canonical models.
+- **Zero floats**: `as_decimal` raises `TypeError` on `float`; the transport
+  decodes JSON numbers with `parse_float=Decimal`. No binary float reaches a
+  financial field.
+- **Deterministic offline testing**: `MockTransport` + `RecordingAdapter`/
+  `ReplayingAdapter` + JSONL fixtures make CI fully deterministic without live
+  credentials.
+- **Broker-agnostic core**: `common/` knows nothing about a specific broker;
+  each broker module only maps its wire fields to canonical models.
+
+## 6. Implementation Status
+
+### Implemented & Verified
+
+| Component | Module | Tests |
+|-----------|--------|-------|
+| Canonical models + enums | `common/models.py` | `tests/test_common_models.py` |
+| Strict decimal parsing | `common/parse.py` | `tests/test_parse.py` |
+| `HttpTransport` / `Adapter` protocols | `common/protocols.py` | (structural) |
+| `UrllibTransport` + `MockTransport` | `common/transport.py` | (exercised by all contract tests) |
+| `BaseRestAdapter` + `BrokerApiError` | `common/base.py` | (exercised by every adapter) |
+| Fixture codec (`to_plain`/`from_plain`) | `common/codec.py` | `tests/test_replay.py` |
+| Fixture record/load (JSONL) | `common/fixtures.py` | `tests/test_replay.py` |
+| `AdapterConfig` + `BrokerCredentials` | `common/config.py` | — |
+| `PaperBroker`/`RecordingAdapter`/`ReplayingAdapter` | `paper.py` | `tests/test_paper.py`, `tests/test_replay.py` |
+| Adapter registry + entry points | `registry.py` | `tests/test_registry.py` |
+| Public API surface | `__init__.py` | `tests/test_init.py` |
+| Dhan adapter | `dhan.py` | `tests/test_dhan.py` (contract tests) |
+| Zerodha adapter | `zerodha.py` | `tests/test_zerodha.py` (contract tests) |
+| Angel One / Upstox / Fyers / Kotak / IIFL | `{angelone,upstox,fyers,kotak,iifl}.py` | import/build only (gap 0001) |
+| `configs/*.toml` templates | `configs/` | — |
+
+### Verification Gate
+
+```bash
+make test      # python -m pytest -q
+make lint      # ruff check .
+make check     # lint + format-check + pytest
+```
+
+### What Remains
+
+- **Broker-contract parity** — contract tests for 5 brokers, real `get_bars`
+  OHLCV history, parsed `cancel_order`, WebSocket streaming, TOTP auth, richer
+  `PaperBroker`, remaining config templates + loader → [plan 0002](../plans/0002-complete-broker-contract-certification.md),
+  gaps [0001–0007](../gaps/README.md).
+- **Cross-repo integration** — align canonical models with `vyapaar-market`
+  (Rust), wire adapters into `vyapaar-exec`, feed `vyapaar-market` indicators,
+  end-to-end fixture → adapter → OMS → ledger test → [plan 0003](../plans/0003-cross-repo-integration.md).
+- **Production hardening** — rate-limit handling, connection pooling/keep-alive,
+  token refresh, structured logging/tracing, benchmark + fuzz → [plan 0004](../plans/0004-production-hardening.md).

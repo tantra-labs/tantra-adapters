@@ -1,23 +1,27 @@
-# `vyapaar-adapters` — Canonical Code Models Reference
+# `vyapaar-adapters` — Canonical Models & Strict Parsing Reference
 
-Documents `vyapaar_adapters/common/models.py`: the canonical broker-agnostic models
-used by every adapter. Every financial field is an exact `decimal.Decimal`; enums use
-the Vyapaar Ubiquitous Language.
+Documents `vyapaar_adapters/common/models.py` (canonical broker-agnostic models
+and enums) and `vyapaar_adapters/common/parse.py` (strict decimal/timestamp
+parsing). Every financial field is an exact `decimal.Decimal`; enums use the
+Vyapaar Ubiquitous Language.
 
-## Enums
+## Enums (`common/models.py`)
 
-| Enum | Members | Notes |
-|------|---------|-------|
-| `OrderSide` | `BUY`, `SELL` | `StrEnum` |
-| `OrderType` | `LIMIT`, `MARKET`, `STOP_LIMIT`, `STOP_MARKET` | `StrEnum` |
-| `TimeInForce` | `DAY`, `IOC`, `GTD` | `StrEnum` |
-| `ProductType` | `DELIVERY`, `INTRADAY`, `MARGIN`, `COVER_ORDER`, `BRACKET_ORDER` | `StrEnum` |
-| `OrderStatus` | `PENDING`, `OPEN`, `PARTIALLY_FILLED`, `COMPLETE`, `REJECTED`, `CANCELLED` | `StrEnum` |
+All enums are `StrEnum`; their `.value` is the lowercase canonical form.
+
+| Enum | Members (value) |
+|------|-----------------|
+| `OrderSide` | `buy`, `sell` |
+| `OrderType` | `limit`, `market`, `stop_limit`, `stop_market` |
+| `TimeInForce` | `day`, `ioc`, `gtd` |
+| `ProductType` | `delivery`, `intraday`, `margin`, `cover_order`, `bracket_order` |
+| `OrderStatus` | `pending`, `open`, `partially_filled`, `complete`, `rejected`, `cancelled` |
 
 ## Models
 
 All models are `@dataclass(frozen=True, slots=True)` and self-validating in
-`__post_init__` (negative prices/quantities raise `ValueError`).
+`__post_init__` (negative prices/quantities raise `ValueError`; `float` inputs
+raise `TypeError`).
 
 ### `Quote`
 
@@ -35,7 +39,8 @@ class Quote:
     timestamp: datetime | None = None
 ```
 
-`last_price` is validated via `non_negative_decimal`.
+Last-traded market quote for one instrument. `last_price` is coerced via
+`non_negative_decimal`.
 
 ### `Bar`
 
@@ -52,8 +57,8 @@ class Bar:
     volume: int = 0
 ```
 
-OHLCV fields are coerced via `as_decimal`. This is the canonical historical-bar model;
-adapters should return `list[Bar]` from `get_bars`.
+Canonical OHLCV bar — the model `get_bars` should return (`list[Bar]`).
+OHLC fields are coerced via `as_decimal`.
 
 ### `OrderRequest`
 
@@ -72,8 +77,10 @@ class OrderRequest:
     tag: str | None = None
 ```
 
-Validation: `quantity`/`limit_price`/`trigger_price` non-negative; `LIMIT` orders
-require `limit_price` (raises `ValueError` otherwise).
+Validated order submission in canonical form. Validation rules:
+- `quantity`, `limit_price`, `trigger_price` must be non-negative.
+- `OrderType.LIMIT` orders **require** `limit_price` (raises `ValueError`
+  otherwise).
 
 ### `Order`
 
@@ -92,7 +99,7 @@ class Order:
     meta: dict[str, object] = field(default_factory=dict)
 ```
 
-Broker-acknowledged order state; returned by `place_order`/`cancel_order`.
+Broker-acknowledged order state; returned by `place_order` / `cancel_order`.
 
 ### `Position`
 
@@ -106,7 +113,8 @@ class Position:
     unrealised_pnl: Decimal | None = None
 ```
 
-Net open position for one instrument; `quantity` may be negative to represent shorts.
+Net open position for one instrument. `quantity` may be negative to represent
+shorts.
 
 ### `Margin`
 
@@ -119,15 +127,32 @@ class Margin:
     currency: str = "INR"
 ```
 
-Available/used/total margin in a currency.
+Available/used/total margin in a currency (default INR).
+
+## Strict Parsing (`common/parse.py`)
+
+The zero-floats invariant is enforced at parse time — a raw broker payload can
+never smuggle binary floating point into a financial field:
+
+```python
+def as_decimal(value: Decimal | int | str) -> Decimal: ...
+def non_negative_decimal(value: Decimal | int | str, field: str) -> Decimal: ...
+def as_iso_ts(value: str | None) -> datetime | None: ...
+```
+
+- `as_decimal(value)` — accepts `Decimal`/`int`/`str`; **raises `TypeError` on
+  `float`**; raises `ValueError` on unparseable input (`Decimal(str(value))`).
+- `non_negative_decimal(value, field)` — `as_decimal` + rejects `< 0`.
+- `as_iso_ts(value)` — parses ISO-8601 (with or without timezone; `Z` is
+  normalized to `+00:00`), assumes UTC for naive input, and returns a UTC
+  `datetime` (`None` for `None`/empty input; `ValueError` for garbage).
 
 ## Zero-Floats Invariant
 
-`vyapaar_adapters/common/parse.py`:
-- `as_decimal(value)` — accepts `Decimal`/`int`/`str`; **raises `TypeError` on
-  `float`**.
-- `non_negative_decimal(value, field)` — `as_decimal` + rejects `< 0`.
-- `as_iso_ts(value)` — parses ISO-8601 to UTC `datetime`.
+Two layers enforce the invariant end to end:
 
-The transport layer decodes JSON numbers with `json.loads(..., parse_float=Decimal)`
-so broker numeric fields never pass through binary floating point.
+1. `as_decimal` rejects `float` outright (see `tests/test_parse.py`:
+   `as_decimal(2456.70)` → `TypeError`).
+2. The transport layer decodes JSON numbers with
+   `json.loads(..., parse_float=Decimal)` so broker numeric fields never pass
+   through binary floating point (see [code-transport](code-transport.md)).

@@ -1,9 +1,11 @@
 # Gap 0002 — `get_bars` Returns a Single `Quote` Stub Instead of OHLCV History
 
+**Status**: open — tracked by [plan 0002](../plans/0002-complete-broker-contract-certification.md)
+
 ## What's Stubbed
 
-Most broker `get_bars` implementations discard the `interval`/`days` arguments and
-return a single-element list built from `get_quote`:
+Six of the seven broker `get_bars` implementations discard the `interval`/`days`
+arguments and return a single-element list built from `get_quote`:
 
 ```python
 def get_bars(self, instrument: str, interval: str = "1d", days: int = 100) -> list[Quote]:
@@ -11,12 +13,8 @@ def get_bars(self, instrument: str, interval: str = "1d", days: int = 100) -> li
     return [self.get_quote(instrument)]
 ```
 
-This occurs in `angelone`, `upstox`, `fyers`, `kotak`, and `iifl`. Even `zerodha` and
-`dhan` return `list[Quote]` where the `Adapter` protocol (`vyapaar_adapters/common/protocols.py`)
-declares `list[Any]` — but the canonical model for historical data is `Bar` (OHLCV),
-not `Quote` (last-traded price only).
+Affected brokers:
 
-Brokers affected:
 | Broker | `get_bars` behavior |
 |--------|---------------------|
 | `angelone` | returns `[self.get_quote(instrument)]` |
@@ -24,22 +22,30 @@ Brokers affected:
 | `fyers` | returns `[self.get_quote(instrument)]` |
 | `kotak` | returns `[self.get_quote(instrument)]` |
 | `iifl` | returns `[self.get_quote(instrument)]` |
-| `dhan` | returns `[self.get_quote(instrument)]` (typed `list[Quote]`) |
-| `zerodha` | real candle loop but returns `Bar` typed as `list[Bar]` |
+| `dhan` | returns `[self.get_quote(instrument)]` |
+| `zerodha` | parses real candles into `list[Bar]`, honoring `days` (only full implementation) |
 
-## Why It Matters
+The canonical model for historical data is `Bar` (OHLCV), not `Quote`
+(last-traded price only); every stub returns `list[Quote]` instead of
+`list[Bar]`. See `docs/design/code-brokers.md` for the exact per-broker
+wire shapes.
 
-Strategies and backtests depend on `get_bars` for OHLCV history. A single-price stub
-makes any indicator or backtest that consumes `get_bars` produce degenerate results
-(one bar = current quote), silently invalidating strategy signals.
+## Why
 
-## How to Close
+Strategies and backtests depend on `get_bars` for OHLCV history. A single-price
+stub makes any indicator or backtest that consumes `get_bars` produce degenerate
+results (one bar = current quote), silently invalidating strategy signals.
 
-1. Implement real historical-candle endpoints per broker (Kite `/instruments/historical`,
-   Dhan candles, Upstox `/historical-candle`, etc.).
+## How to Close It
+
+1. Implement real historical-candle endpoints per broker (Zerodha
+   `/instruments/historical`, Dhan candles, Upstox `/historical-candle`, etc.).
 2. Return `list[Bar]` (canonical OHLCV model), honoring `interval` and `days`.
-3. Add contract tests with `MockTransport` canned candle payloads asserting `Bar`
-   fields (`open`, `high`, `low`, `close`, `volume`, `ts`).
+3. Add contract tests with `MockTransport` canned candle payloads asserting
+   `Bar` fields (`open`, `high`, `low`, `close`, `volume`, `ts`).
 4. Align all `get_bars` signatures to return `list[Bar]`.
 
-See `docs/plans/0002-complete-broker-contract-certification.md` for the tracking plan.
+## Verification
+
+`pytest tests/test_<broker>.py -q` passes with canned candle payloads; every
+broker's `get_bars` returns `list[Bar]` honoring `interval`/`days`.
