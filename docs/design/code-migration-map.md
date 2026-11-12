@@ -62,7 +62,7 @@ transport abstraction, and broker wire mappings described in
 ## Verification
 
 ```bash
-cd /project1/vyapaar-labs/vyapaar-adapters
+# Run from the repository root
 make check    # ruff check . && ruff format --check . && python -m pytest -q
 ```
 
