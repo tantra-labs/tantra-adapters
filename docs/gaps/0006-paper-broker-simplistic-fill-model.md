@@ -1,6 +1,6 @@
 # Gap 0006 — `PaperBroker` Uses a Simplistic Fill Model
 
-**Status**: open — tracked by [plan 0002](../plans/0002-complete-broker-contract-certification.md)
+**Status**: open — improvement, tracked by [plan 0002](../plans/0002-complete-broker-contract-certification.md) (re-verified against source 2026-11-12: `get_margin()` returns hardcoded ₹1,00,000 margin and `get_bars()` synthesizes flat bars)
 
 ## What's Simplistic
 

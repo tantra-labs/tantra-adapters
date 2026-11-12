@@ -1,6 +1,6 @@
 # Gap 0002 — `get_bars` Returns a Single `Quote` Stub Instead of OHLCV History
 
-**Status**: open — tracked by [plan 0002](../plans/0002-complete-broker-contract-certification.md)
+**Status**: open — tracked by [plan 0002](../plans/0002-complete-broker-contract-certification.md) (re-verified against source 2026-11-12: six brokers return single-element stub; only `zerodha` parses real candles)
 
 ## What's Stubbed
 

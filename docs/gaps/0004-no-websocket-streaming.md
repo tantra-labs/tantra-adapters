@@ -1,6 +1,6 @@
 # Gap 0004 — No WebSocket / Tick Streaming Support; REST-Only Adapters
 
-**Status**: open — tracked by [plan 0002](../plans/0002-complete-broker-contract-certification.md)
+**Status**: open — tracked by [plan 0002](../plans/0002-complete-broker-contract-certification.md) (re-verified against source 2026-11-12: no `WebSocketTransport`, no `subscribe_ticks`)
 
 ## What's Missing
 

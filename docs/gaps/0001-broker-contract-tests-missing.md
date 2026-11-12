@@ -1,6 +1,6 @@
 # Gap 0001 — Missing Broker Contract Tests for angelone, upstox, fyers, kotak, iifl
 
-**Status**: open — tracked by [plan 0002](../plans/0002-complete-broker-contract-certification.md)
+**Status**: open — tracked by [plan 0002](../plans/0002-complete-broker-contract-certification.md) (re-verified against `tests/` 2026-11-12)
 
 ## What's Missing
 
@@ -42,7 +42,8 @@ For each of the five brokers, add a `tests/test_<broker>.py` mirroring
    `BrokerApiError`.
 
 Root cause: the five modules shipped without the corresponding test suite (see
-`docs/design/code-migration-map.md`).
+`docs/design/code-migration-map.md`). See `docs/plans/0002-complete-broker-contract-certification.md`
+for the plan that tracks this gap.
 
 ## Verification
 

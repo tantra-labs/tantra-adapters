@@ -58,6 +58,23 @@ streaming + TOTP headless auth. This plan collects gaps 0001–0007.
 4. Document credential sourcing (environment variables / secrets manager,
    never commit real tokens).
 
+### Phase D — Improvements
+
+Non-correctness items surfaced during the 2026-11-12 documentation pass:
+
+1. Export `to_plain`/`from_plain` and `BaseRestAdapter`/`BrokerApiError` from
+   `common/__init__.py` (or document the import path in the public-API doc) —
+   currently discoverable only by reading source.
+2. `MockTransport` raises bare `KeyError` on missing canned responses; a typed error
+   naming the unmatched URL would sharpen test failures.
+3. `RecordingAdapter`/`ReplayingAdapter` carry `# type: ignore[attr-defined]` on every
+   delegation; a `Protocol`-typed `inner` would remove the ignores.
+4. Consider a `client_order_id` idempotency convention in `place_order` (currently
+   carried on `OrderRequest` but not honored by all adapters).
+5. `get_margin()` in live adapters maps broker funds to `Margin` inconsistently
+   (e.g. Dhan's misspelled wire field `availabelBalance`); add per-broker margin
+   contract tests in Phase A rather than a separate fixture suite.
+
 ## 3. Exit Criteria
 
 - `pytest -q` passes for all test files (all seven brokers + common + registry +

@@ -71,17 +71,25 @@ vyapaar_adapters/
     └── transport.py     # UrllibTransport (parse_float=Decimal) + MockTransport
 ```
 
-Reference docs:
+## 5. Per-Module Design Docs
 
-- [code-models](code-models.md) — canonical models, enums, strict parsing.
-- [code-transport](code-transport.md) — `HttpTransport`/`Adapter` protocols, transports, `BaseRestAdapter`.
-- [code-config](code-config.md) — pydantic config models + `configs/*.toml` templates.
-- [code-paper](code-paper.md) — `PaperBroker`, recording/replay, JSONL fixtures.
-- [code-registry](code-registry.md) — entry-point discovery + fallback registry.
-- [code-brokers](code-brokers.md) — per-broker wire mappings.
-- [code-migration-map](code-migration-map.md) — Tier 6B implementation record.
+Every module has a dedicated reference under `docs/design/` (`code-*.md`,
+one per module, mirroring the per-crate convention used across the workspace):
 
-## 5. Design Principles
+| Module(s) | Doc |
+|-----------|-----|
+| `common/models.py` | [code-models.md](code-models.md) |
+| `common/parse.py` | [code-parse.md](code-parse.md) |
+| `common/protocols.py`, `common/transport.py`, `common/base.py` | [code-transport.md](code-transport.md) |
+| `common/config.py` + `configs/*.toml` | [code-config.md](code-config.md) |
+| `common/codec.py`, `common/fixtures.py` | [code-codec.md](code-codec.md) |
+| `paper.py` (PaperBroker / Recording / Replaying) | [code-paper.md](code-paper.md) |
+| `registry.py` | [code-registry.md](code-registry.md) |
+| the seven broker modules | [code-brokers.md](code-brokers.md) |
+| `__init__.py`, `common/__init__.py`, `_compat.py` | [code-public-api.md](code-public-api.md) |
+| historical honba-adapters → vyapaar-adapters migration | [code-migration-map.md](code-migration-map.md) |
+
+## 6. Design Principles
 
 - **Interface-first**: `Adapter` and `HttpTransport` are `runtime_checkable`
   `Protocol`s; adapters depend on abstractions, not concrete transports.
@@ -96,7 +104,7 @@ Reference docs:
 - **Broker-agnostic core**: `common/` knows nothing about a specific broker;
   each broker module only maps its wire fields to canonical models.
 
-## 6. Implementation Status
+## 7. Implementation Status
 
 ### Implemented & Verified
 

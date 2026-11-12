@@ -1,10 +1,24 @@
 # Gap 0007 — `configs/` TOML Templates Only Partially Populated; No Loader
 
-**Status**: open (partial) — tracked by [plan 0002](../plans/0002-complete-broker-contract-certification.md)
+**Status**: open (partial) — improvement, tracked by [plan 0002](../plans/0002-complete-broker-contract-certification.md) (re-verified 2026-11-12)
 
-## What's Stubbed or Missing
+## What's Missing
 
-The `configs/` directory exists and **is partially populated**:
+Partially addressed since this gap was filed. Current verified state:
+
+- Templates **exist** for `paper`, `dhan`, and `zerodha` (`configs/paper.toml`,
+  `configs/dhan.toml`, `configs/zerodha.toml`), matching the `AdapterConfig`
+  shape (flat `broker`/`paper` keys + a `[credentials]` table, `YOUR_*`
+  placeholders instead of real tokens).
+- Templates are **missing** for the remaining five brokers: `angelone`, `upstox`,
+  `fyers`, `kotak`, `iifl`.
+- There is **no config loader**: `AdapterConfig.from_toml(path)` does not exist.
+  The only `tomllib` use in the repo is `tests/test_registry.py` (reading
+  `pyproject.toml` for entry-point sync), not connection templates.
+- There is **no test** asserting any template parses into `AdapterConfig`, and no
+  CI check that the templates stay valid.
+- `paper = true` is declarative only: nothing yet routes a config into a
+  `PaperBroker`.
 
 | Template | Present |
 |----------|---------|
@@ -33,14 +47,15 @@ hand-instantiate the pydantic model.
 
 ## How to Close It
 
-1. Add `angelone.toml`, `upstox.toml`, `fyers.toml`, `kotak.toml`,
-   `iifl.toml` (paper + live shape, mirroring `dhan.toml`/`zerodha.toml`).
+1. Add the five missing templates (`angelone.toml`, `upstox.toml`, `fyers.toml`,
+   `kotak.toml`, `iifl.toml`), same shape as `dhan.toml`.
 2. Add a config loader — `AdapterConfig.from_toml(path)` (stdlib `tomllib` on
    py3.11) or a `load_config` helper — and document it in
    `docs/design/code-config.md`.
-3. Add a test asserting each template parses into `AdapterConfig`
+3. Add a test asserting each template in `configs/` parses into `AdapterConfig`
    (`pytest tests/test_config.py`).
-4. Document credential sourcing (environment variables / secrets manager,
+4. Wire `paper = true` to `PaperBroker` construction (or document why not).
+5. Document credential sourcing (environment variables / secrets manager,
    never commit real tokens).
 
 ## Verification

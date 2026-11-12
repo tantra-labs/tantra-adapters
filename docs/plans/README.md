@@ -16,7 +16,7 @@ milestones are now plans 0003 and 0004.
 
 | # | Title | Target Scope | Status |
 |---|-------|--------------|--------|
-| [0002](0002-complete-broker-contract-certification.md) | Complete Broker Contract Certification & Adapter Parity | `vyapaar_adapters` (all 7 brokers) | Ready — tracks gaps 0001–0007 |
+| [0002](0002-complete-broker-contract-certification.md) | Complete Broker Contract Certification & Adapter Parity | `vyapaar_adapters` (all 7 brokers) | Ready — tracks gaps 0001–0007 (Phases A–D, incl. improvements) |
 | [0003](0003-cross-repo-integration.md) | Cross-Repo Integration (Python Adapters ↔ Rust Core) | `vyapaar-adapters` + `vyapaar-market` / `vyapaar-exec` / `vyapaar-ledger` | Proposed |
 | [0004](0004-production-hardening.md) | Production Hardening (Transport & Auth Reliability) | `vyapaar_adapters` | Proposed |
 

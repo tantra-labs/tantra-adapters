@@ -1,6 +1,6 @@
 # Gap 0003 — `cancel_order` Fabricates an `Order` Without Parsing the Broker Response
 
-**Status**: open — tracked by [plan 0002](../plans/0002-complete-broker-contract-certification.md)
+**Status**: open — tracked by [plan 0002](../plans/0002-complete-broker-contract-certification.md) (re-verified against source 2026-11-12: all seven brokers discard response body and return fabricated `Order`)
 
 ## What's Stubbed
 
