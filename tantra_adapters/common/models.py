@@ -90,6 +90,31 @@ class Bar:
 
 
 @dataclass(frozen=True, slots=True)
+class Tick:
+    """Canonical streaming tick for one instrument.
+
+    Carries the exact last-traded price, optional bid/ask depth levels, and
+    the timestamp when the exchange published the tick. Every financial field
+    is an exact ``decimal.Decimal``.
+    """
+
+    instrument: str
+    last_price: Decimal
+    ts: datetime | None = None
+    change: Decimal | None = None
+    volume: int | None = None
+    bid: Decimal | None = None
+    ask: Decimal | None = None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "last_price", non_negative_decimal(self.last_price, "last_price"))
+        for field_name in ("change", "bid", "ask"):
+            value = getattr(self, field_name)
+            if value is not None:
+                object.__setattr__(self, field_name, as_decimal(value))
+
+
+@dataclass(frozen=True, slots=True)
 class OrderRequest:
     """A validated order submission in canonical form."""
 
@@ -172,3 +197,15 @@ class Margin:
         object.__setattr__(self, "available", non_negative_decimal(self.available, "available"))
         object.__setattr__(self, "used", non_negative_decimal(self.used, "used"))
         object.__setattr__(self, "total", non_negative_decimal(self.total, "total"))
+
+
+def client_order_id_meta(request: OrderRequest) -> dict[str, object]:
+    """The idempotency metadata echoed on a placed :class:`Order`.
+
+    The canonical ``client_order_id`` idempotency convention: every adapter
+    echoes the request's correlation id onto the acknowledged ``Order.meta``
+    so callers can dedupe a retried placement against the broker ack.
+    """
+    if request.client_order_id is None:
+        return {}
+    return {"client_order_id": request.client_order_id}

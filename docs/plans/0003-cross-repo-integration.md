@@ -41,7 +41,7 @@ pipeline (market feed → indicators → strategy → risk → OMS → ledger).
 1. Feed adapter `Quote`/`Bar` into the `tantra-market` indicator pipeline for
    Python strategy backtests.
 2. Align the Python WebSocket streaming work from
-   [plan 0002](0002-complete-broker-contract-certification.md) (gap 0004) with
+   plan 0002 Phase B (implemented 2026-11-13; `subscribe_ticks` + `Tick`) with
    the Rust `Tick` contract.
 
 ### Phase D — End-to-end deterministic test
@@ -60,8 +60,8 @@ pipeline (market feed → indicators → strategy → risk → OMS → ledger).
 
 ## 4. Related
 
-- [Plan 0002](0002-complete-broker-contract-certification.md) — adapter parity
-  this plan depends on.
+- Plan 0002 (adapter parity, implemented 2026-11-13) — the contract-certified
+  adapters this plan builds on.
 - `tantra-market`, `tantra-exec`, `tantra-ledger` — consuming repos; any
   stub placed here must be filed as a gap/plan in the owning repo per
   `.agents/rules/gap-tracking.md`.

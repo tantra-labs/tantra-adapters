@@ -64,8 +64,65 @@ class MockTransport:
         key = f"{method.upper()} {url}"
         self.history.append((key, url, payload))
         if key not in self.responses:
-            raise KeyError(f"no canned response for {key!r}; recorded {sorted(self.responses)}")
+            raise MockTransportError(key, url, sorted(self.responses))
         return self.responses[key]
 
     def add(self, method: str, url: str, response: tuple[int, Any]) -> None:
         self.responses[f"{method.upper()} {url}"] = response
+
+
+class MockTransportError(KeyError):
+    """Raised when a mock has no canned response for a requested URL.
+
+    Carries the unmatched method+URL and the recorded response keys so a
+    contract-test failure names the exact missing fixture instead of a bare
+    ``KeyError``.
+    """
+
+    def __init__(self, key: str, url: str, recorded: list[str]) -> None:
+        self.key = key
+        self.url = url
+        self.recorded = recorded
+        super().__init__(f"no canned response for {key!r}; recorded {recorded}")
+
+
+class MockWebSocketTransport:
+    """Deterministic in-memory WebSocket for offline tick-stream contract tests.
+
+    Pre-canned ``frames`` are replayed in order on :meth:`receive`; ``close()``
+    raises ``ConnectionError`` so the adapter's read loop terminates. Every
+    connect/subscribe/unsubscribe call is recorded in ``history``.
+    """
+
+    def __init__(self, frames: list[str] | None = None) -> None:
+        self.frames: list[str] = list(frames or [])
+        self.history: list[tuple[str, object]] = []
+        self._cursor = 0
+        self._open = False
+
+    async def connect(self, url: str, headers: dict[str, str] | None = None) -> None:
+        del headers
+        self.history.append(("connect", url))
+        self._open = True
+
+    async def subscribe(self, channels: list[str]) -> None:
+        self.history.append(("subscribe", list(channels)))
+        self._open = True
+
+    async def unsubscribe(self, channels: list[str]) -> None:
+        self.history.append(("unsubscribe", list(channels)))
+        self._open = True
+
+    async def receive(self) -> str:
+        if not self._open or self._cursor >= len(self.frames):
+            raise ConnectionError("mock websocket closed")
+        frame = self.frames[self._cursor]
+        self._cursor += 1
+        return frame
+
+    async def disconnect(self) -> None:
+        self.history.append(("disconnect", None))
+        self._open = False
+
+    def on_message(self, callback: object) -> None:
+        del callback  # the adapter's streaming loop owns frame dispatch

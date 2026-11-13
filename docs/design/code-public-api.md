@@ -13,7 +13,7 @@ canonical models, the paper harness, and the registry. Broker modules are
 
 | Export | Kind | Source |
 |--------|------|--------|
-| `Bar`, `Margin`, `Order`, `OrderRequest`, `Position`, `Quote` | frozen dataclasses | `common.models` |
+| `Bar`, `Margin`, `Order`, `OrderRequest`, `Position`, `Quote`, `Tick` | frozen dataclasses | `common.models` |
 | `OrderSide`, `OrderStatus`, `OrderType`, `ProductType`, `TimeInForce` | `StrEnum`s | `common.models` |
 | `PaperBroker`, `RecordingAdapter`, `ReplayingAdapter` | offline harness | `paper` |
 | `BROKER_ADAPTERS`, `load_adapters` | registry | `registry` |
@@ -26,17 +26,20 @@ needs in one import:
 
 | Export | Source module |
 |--------|---------------|
-| `Adapter`, `HttpTransport` | `protocols` (runtime-checkable Protocols) |
-| `AdapterConfig`, `BrokerCredentials` | `config` (pydantic) |
-| `UrllibTransport`, `MockTransport` | `transport` |
+| `Adapter`, `HttpTransport`, `WebSocketTransport` | `protocols` (runtime-checkable Protocols) |
+| `AdapterConfig`, `BrokerCredentials` | `config` (pydantic; `AdapterConfig.from_toml`) |
+| `UrllibTransport`, `MockTransport`, `MockWebSocketTransport` | `transport` |
+| `BaseRestAdapter`, `BrokerApiError` | `base` |
+| `to_plain`, `from_plain` | `codec` |
 | `as_decimal`, `non_negative_decimal`, `as_iso_ts` | `parse` |
 | `record_fixture`, `load_fixture` | `fixtures` |
 | canonical models + enums | `models` |
 
-Note the asymmetry: `to_plain`/`from_plain` (codec) and `BaseRestAdapter`/`BrokerApiError`
-(base) are **not** re-exported from `common/__init__.py` — they are internal
-machinery (paper harness and broker subclasses respectively) and are imported from
-their modules directly.
+The `common/__init__.py` re-exports everything above, so adapter authors and
+tests import from `tantra_adapters.common` directly. (This supersedes the
+pre-plan-0002 asymmetry where `to_plain`/`from_plain` and
+`BaseRestAdapter`/`BrokerApiError` were internal-only; plan 0002 Phase D made
+them public exports.)
 
 ## `_compat.py` — Optional Native Wheel Fallback
 
@@ -46,6 +49,7 @@ dependencies but is **optional at runtime**:
 ```python
 try:  # exercised only when the native wheel is absent
     from tantra import Decimal as TantraDecimal
+
     VYAAPAAR_AVAILABLE = True
 except ImportError:
     TantraDecimal = Decimal

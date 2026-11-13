@@ -136,10 +136,11 @@ make check     # lint + format-check + pytest
 
 ### What Remains
 
-- **Broker-contract parity** — contract tests for 5 brokers, real `get_bars`
-  OHLCV history, parsed `cancel_order`, WebSocket streaming, TOTP auth, richer
-  `PaperBroker`, remaining config templates + loader → [plan 0002](../plans/0002-complete-broker-contract-certification.md),
-  gaps [0001–0007](../gaps/README.md).
+- **Broker-contract parity** — ✅ implemented (`2026-11-13`, plan 0002 Phases
+  A–D): contract tests for all 7 brokers, real `get_bars` OHLCV history, parsed
+  `cancel_order`, WebSocket streaming (`subscribe_ticks`/`Tick`), TOTP headless
+  auth, richer `PaperBroker`, full config templates + `AdapterConfig.from_toml`
+  loader. Gaps 0001–0007 closed.
 - **Cross-repo integration** — align canonical models with `tantra-market`
   (Rust), wire adapters into `tantra-exec`, feed `tantra-market` indicators,
   end-to-end fixture → adapter → OMS → ledger test → [plan 0003](../plans/0003-cross-repo-integration.md).

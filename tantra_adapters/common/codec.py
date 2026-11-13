@@ -18,6 +18,7 @@ from tantra_adapters.common import models as _models
 _MODEL_TYPES: dict[str, type] = {
     "Quote": _models.Quote,
     "Bar": _models.Bar,
+    "Tick": _models.Tick,
     "Order": _models.Order,
     "OrderRequest": _models.OrderRequest,
     "Position": _models.Position,

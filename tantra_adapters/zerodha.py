@@ -21,15 +21,59 @@ from tantra_adapters.common.models import (
     OrderType,
     Position,
     Quote,
+    Tick,
     TimeInForce,
+    client_order_id_meta,
 )
-from tantra_adapters.common.parse import as_decimal, as_iso_ts
+from tantra_adapters.common.parse import as_decimal, as_iso_ts, json_frame
+
+
+def _best_quote(levels: object) -> Decimal | None:
+    """The best bid/ask price from a Kite depth level list."""
+    if not isinstance(levels, list) or not levels:
+        return None
+    first = levels[0]
+    if isinstance(first, dict) and first.get("price") is not None:
+        return as_decimal(first["price"])
+    return None
 
 
 class ZerodhaAdapter(BaseRestAdapter):
     """REST adapter for the Zerodha Kite Connect API."""
 
     default_base_url = "https://api.kite.trade"
+    ws_url = "wss://ws.kite.trade"
+
+    def _ws_headers(self) -> dict[str, str]:
+        return {
+            "Authorization": (f"token {self.credentials.api_key}:{self.credentials.access_token}")
+        }
+
+    def _subscribe_channels(self, instruments: list[str]) -> list[str]:
+        # Kite ticker keys on the instrument token; use the canonical string
+        # when no broker token is available (offline mock parity).
+        return list(instruments)
+
+    def _parse_tick_frame(self, frame: str, instruments: list[str]) -> list[Tick]:
+        payload = json_frame(frame)
+        ticks: list[Tick] = []
+        for instrument, data in payload.items():
+            if not isinstance(data, dict) or instrument not in instruments:
+                continue
+            ltp = data.get("last_price")
+            if ltp is None:
+                continue
+            ticks.append(
+                Tick(
+                    instrument=instrument,
+                    last_price=ltp,
+                    volume=data.get("volume"),
+                    change=data.get("change"),
+                    bid=_best_quote(data.get("depth", {}).get("buy")),
+                    ask=_best_quote(data.get("depth", {}).get("sell")),
+                )
+            )
+        return ticks
 
     def _headers(self) -> dict[str, str]:
         headers = super()._headers()
@@ -121,10 +165,14 @@ class ZerodhaAdapter(BaseRestAdapter):
             filled_quantity=Decimal(0),
             price=request.limit_price,
             status=OrderStatus.PENDING,
+            meta=client_order_id_meta(request),
         )
 
     def cancel_order(self, order_id: str) -> Order:
-        self._delete(f"/orders/regular/{order_id}")
+        body = self._delete(f"/orders/regular/{order_id}")
+        data = body.get("data") if isinstance(body, dict) else None
+        if isinstance(data, dict) and data.get("order_id"):
+            order_id = data["order_id"]
         return Order(
             order_id=order_id,
             instrument="",

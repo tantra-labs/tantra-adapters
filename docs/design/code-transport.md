@@ -42,7 +42,8 @@ class Adapter(Protocol):
     def get_margin(self) -> Any: ...
 ```
 
-REST-only today; streaming is tracked by [gap 0004](../gaps/0004-no-websocket-streaming.md).
+REST + WebSocket today; tick streaming lands via `subscribe_ticks` (see
+[code-brokers](code-brokers.md) — plan 0002 Phase B implemented).
 
 ## Transports (`common/transport.py`)
 

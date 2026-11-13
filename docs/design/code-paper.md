@@ -16,12 +16,27 @@ quote crosses the limit price. Fills are exact `decimal.Decimal` arithmetic.
 PaperBroker(
     quotes: dict[str, Decimal | str],
     fill_fraction: Decimal | str | None = None,
+    order_book: dict[str, tuple[Decimal | str, Decimal | str, Decimal | str, Decimal | str]] | None = None,
+    slippage: Decimal | str | None = None,
+    latency_ms: int = 0,
+    reject_rate: Decimal | str | None = None,
+    reject_seed: int = 0,
 )
 ```
 
 - `quotes` — instrument → price map (coerced via `as_decimal`).
 - `fill_fraction` — fraction of quantity filled per order (default `1.0` = full
   fill). A `fill_fraction < 1` produces `PARTIALLY_FILLED` orders.
+- `order_book` — per-instrument `(bid_price, bid_qty, ask_price, ask_qty)`
+  depth levels; market orders execute against the ask (BUY) or bid (SELL) and
+  fill only up to the available depth (partial-fill realism).
+- `slippage` — fractional price slippage (e.g. `"0.001"` = 10 bps) applied to
+  market fills (BUY fills at ask × (1+slippage); SELL at bid × (1−slippage)).
+- `latency_ms` — simulated latency recorded on the returned `Order.meta`.
+- `reject_rate` + `reject_seed` — seeded rejection probability that simulates
+  risk-limit breaches; the same seed replays identically (deterministic).
+
+All realism knobs default off so CI stays deterministic.
 
 ### Methods
 
@@ -39,11 +54,12 @@ Fill accounting (`_apply_fill`): signed quantity is applied to the net
 position; the average price is replaced when a position is opened or flips
 sign.
 
-### Fill-Model Limitations (see gap 0006)
+### Fill-Model Realism (plan 0002 Phase C)
 
-Single price per instrument; no order book, no price levels, no slippage, no
-latency; a uniform `fill_fraction` applies to every order. Suitable for smoke
-tests and deterministic CI, not realistic paper backtesting.
+Optional order-book depth (`order_book`), partial fills proportional to
+available depth, slippage (`slippage`), latency (`latency_ms`, recorded on
+`Order.meta`), and seeded risk-limit rejection (`reject_rate`/`reject_seed`).
+Default construction stays a single-price deterministic simulation for CI.
 
 ## `RecordingAdapter` (`paper.py`)
 

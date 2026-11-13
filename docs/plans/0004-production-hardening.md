@@ -15,8 +15,8 @@ pass over the parse/transport path. This plan absorbs the former roadmap
 The current `UrllibTransport` is a single-shot `urllib` request with a fixed
 timeout and no retry, pooling, or logging. Adapters never retry on `429`
 (rate limit), never refresh expired OAuth tokens, and log nothing structured.
-For unattended execution these are production blockers once plan 0002
-delivers the contract-certified adapters.
+For unattended execution these are production blockers once the
+contract-certified adapters (plan 0002, implemented 2026-11-13) are in use.
 
 ## 2. Component Specifications & Phases
 
@@ -39,7 +39,7 @@ delivers the contract-certified adapters.
 
 1. Track token expiry per broker; refresh before `401`.
 2. Reuse the auth work from
-   [plan 0002](0002-complete-broker-contract-certification.md) (gap 0005).
+   plan 0002 Phase B (implemented 2026-11-13; `common/auth.py`, `SessionState`).
 3. Add a `401` → refresh → retry path with contract tests.
 
 ### Phase D — Observability
@@ -66,7 +66,7 @@ delivers the contract-certified adapters.
 
 ## 4. Related
 
-- [Plan 0002](0002-complete-broker-contract-certification.md) — the contract
-  parity this hardening applies to.
+- Plan 0002 (adapter contract parity, implemented 2026-11-13) — the
+  contract parity this hardening applies to.
 - `tantra-exec` — the production execution router that consumes hardened
   adapter calls.

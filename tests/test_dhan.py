@@ -25,6 +25,11 @@ def build_transport() -> MockTransport:
     )
     transport.add("POST", f"{BASE}/v2/orders", (200, {"orderId": "DHAN-4242"}))
     transport.add(
+        "DELETE",
+        f"{BASE}/v2/orders/DHAN-4242",
+        (200, {"data": {"orderId": "DHAN-4242"}}),
+    )
+    transport.add(
         "GET",
         f"{BASE}/v2/positions",
         (
@@ -91,3 +96,50 @@ def test_get_margin_uses_available_balance() -> None:
     adapter = DhanAdapter(transport=build_transport())
     margin = adapter.get_margin()
     assert margin.available == Decimal("88000.50")
+
+
+def test_cancel_order_parses_response_order_id() -> None:
+    adapter = DhanAdapter(transport=build_transport())
+    order = adapter.cancel_order("DHAN-4242")
+    assert order.order_id == "DHAN-4242"
+    assert order.status is OrderStatus.CANCELLED
+
+
+def test_get_bars_returns_real_ohlcv_honoring_days() -> None:
+    from datetime import date
+
+    from tantra_adapters.common.models import Bar
+
+    transport = build_transport()
+    transport.add(
+        "GET",
+        f"{BASE}/v2/charts/historical",
+        (
+            200,
+            {
+                "data": [
+                    {
+                        "timestamp": "2024-01-02 09:15:00",
+                        "open": "2440.00",
+                        "high": "2470.00",
+                        "low": "2435.00",
+                        "close": "2450.00",
+                        "volume": 1234,
+                    },
+                    {
+                        "timestamp": "2024-01-03 09:15:00",
+                        "open": "2450.00",
+                        "high": "2480.00",
+                        "low": "2445.00",
+                        "close": "2475.50",
+                        "volume": 2000,
+                    },
+                ]
+            },
+        ),
+    )
+    adapter = DhanAdapter(transport=transport, bars_end_date=date(2024, 1, 5))
+    bars = adapter.get_bars("NSE:NIFTY50-INDEX", interval="1D", days=1)
+    assert len(bars) == 1
+    assert isinstance(bars[0], Bar)
+    assert bars[0].close == Decimal("2475.50")

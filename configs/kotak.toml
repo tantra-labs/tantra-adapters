@@ -1,0 +1,10 @@
+# Kotak Neo template (live).
+broker = "kotak"
+paper = false
+# base_url = "https://gw-napi.kotaksecurities.com/Orders/1.0"
+
+[credentials]
+api_key = "YOUR_API_KEY"
+access_token = "YOUR_ACCESS_TOKEN"
+client_id = "YOUR_CLIENT_ID"
+api_secret = "YOUR_API_SECRET"

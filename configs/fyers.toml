@@ -1,0 +1,11 @@
+# Fyers v3 template (live).
+broker = "fyers"
+paper = false
+# base_url = "https://api-t1.fyers.in/api/v3"
+
+[credentials]
+api_key = "YOUR_CLIENT_ID"
+access_token = "YOUR_ACCESS_TOKEN"
+client_id = "YOUR_CLIENT_ID"
+api_secret = "YOUR_SECRET_KEY"
+# totp_seed = ""       # Base32 seed if headless TOTP login is added

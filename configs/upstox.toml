@@ -1,0 +1,11 @@
+# Upstox v2 template (live).
+broker = "upstox"
+paper = false
+# base_url = "https://api.upstox.com/v2"
+
+[credentials]
+api_key = "YOUR_CLIENT_ID"
+access_token = "YOUR_ACCESS_TOKEN"
+client_id = ""
+api_secret = "YOUR_CLIENT_SECRET"
+# totp_seed = ""       # Base32 seed for headless TOTP login

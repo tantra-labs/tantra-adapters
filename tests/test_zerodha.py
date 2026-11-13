@@ -37,6 +37,11 @@ def build_transport() -> MockTransport:
     )
     transport.add("POST", f"{BASE}/orders/regular", (200, {"data": {"order_id": "2501010001"}}))
     transport.add(
+        "DELETE",
+        f"{BASE}/orders/regular/2501010001",
+        (200, {"data": {"order_id": "2501010001"}}),
+    )
+    transport.add(
         "GET",
         f"{BASE}/portfolio/positions",
         (
@@ -103,3 +108,10 @@ def test_get_margin_totals_available_and_used() -> None:
     assert margin.available == Decimal("95000")
     assert margin.used == Decimal("5000")
     assert margin.total == Decimal("100000")
+
+
+def test_cancel_order_parses_response_order_id() -> None:
+    adapter = ZerodhaAdapter(transport=build_transport())
+    order = adapter.cancel_order("2501010001")
+    assert order.order_id == "2501010001"
+    assert order.status is OrderStatus.CANCELLED

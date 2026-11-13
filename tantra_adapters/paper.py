@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import random
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
@@ -17,6 +18,7 @@ from tantra_adapters.common.models import (
     Quote,
 )
 from tantra_adapters.common.parse import as_decimal
+from tantra_adapters.common.protocols import Adapter
 
 _SEED = Decimal("100.00")
 
@@ -27,15 +29,46 @@ class PaperBroker:
     Market orders fill immediately at the simulated quote; limit orders fill
     only when the quote crosses the limit price. Fills are exact ``Decimal``
     arithmetic.
+
+    Optional realism knobs (all default off so CI stays deterministic):
+
+    - ``order_book`` — per-instrument ``(bid_price, bid_qty, ask_price,
+      ask_qty)`` depth levels; market orders execute against the ask (BUY) or
+      bid (SELL) and fill only up to the available depth.
+    - ``slippage`` — fractional price slippage (e.g. ``"0.001"`` = 10 bps)
+      applied to market fills (BUY fills at ask * (1+slippage)).
+    - ``latency_ms`` — simulated order latency recorded on ``Order.meta``.
+    - ``reject_rate`` + ``reject_seed`` — seeded rejection probability that
+      simulates risk-limit breaches; orders draw a deterministic pseudo-random
+      number, so a fixed seed replays identically.
     """
 
     def __init__(
         self,
         quotes: dict[str, Decimal | str],
         fill_fraction: Decimal | str | None = None,
+        order_book: (
+            dict[str, tuple[Decimal | str, Decimal | str, Decimal | str, Decimal | str]] | None
+        ) = None,
+        slippage: Decimal | str | None = None,
+        latency_ms: int = 0,
+        reject_rate: Decimal | str | None = None,
+        reject_seed: int = 0,
     ) -> None:
         self._quotes = {instrument: as_decimal(price) for instrument, price in quotes.items()}
         self._fill_fraction = None if fill_fraction is None else as_decimal(fill_fraction)
+        self._order_book = (
+            None
+            if order_book is None
+            else {
+                instrument: tuple(as_decimal(level) for level in levels)
+                for instrument, levels in order_book.items()
+            }
+        )
+        self._slippage = None if slippage is None else as_decimal(slippage)
+        self._latency_ms = latency_ms
+        self._reject_rate = None if reject_rate is None else as_decimal(reject_rate)
+        self._rng = random.Random(reject_seed)
         self._orders: dict[str, Order] = {}
         self._positions: dict[str, Decimal] = {}
         self._average_price: dict[str, Decimal] = {}
@@ -90,13 +123,17 @@ class PaperBroker:
             return self._order(
                 order_id, request, Decimal(0), None, OrderStatus.REJECTED, "no quote"
             )
+        if self._reject_rate is not None and self._rng.random() < float(self._reject_rate):
+            return self._order(
+                order_id, request, Decimal(0), None, OrderStatus.REJECTED, "risk-limit breach"
+            )
         fill_fraction = self._fill_fraction or Decimal(1)
         fill_qty = (request.quantity * fill_fraction).quantize(Decimal("0.01"))
 
         fill_price: Decimal | None = None
         status = OrderStatus.OPEN
         if request.order_type.value == "market":
-            fill_price = quote
+            fill_price, fill_qty = self._market_execution(request, quote, fill_qty)
             status = (
                 OrderStatus.PARTIALLY_FILLED
                 if fill_qty < request.quantity
@@ -114,10 +151,56 @@ class PaperBroker:
             )
 
         order = self._order(order_id, request, fill_qty, fill_price, status)
+        if self._latency_ms:
+            order = Order(
+                order_id=order.order_id,
+                instrument=order.instrument,
+                side=order.side,
+                quantity=order.quantity,
+                filled_quantity=order.filled_quantity,
+                price=order.price,
+                status=order.status,
+                message=order.message,
+                ts=order.ts,
+                meta={"latency_ms": self._latency_ms},
+            )
         self._orders[order_id] = order
         if fill_price is not None and fill_qty > 0:
             self._apply_fill(request.instrument, request.side, fill_qty, fill_price)
         return order
+
+    def _market_execution(
+        self,
+        request: OrderRequest,
+        quote: Decimal,
+        fill_qty: Decimal,
+    ) -> tuple[Decimal, Decimal]:
+        """Execute a market order against the order book / quote.
+
+        Returns ``(fill_price, fill_qty)``. With an ``order_book`` the fill
+        price is the ask (BUY) or bid (SELL) level and the fill is capped at
+        the available depth; without one the quote price fills the full
+        quantity. Slippage (if configured) widens the fill price against the
+        taker.
+        """
+        fill_qty = min(fill_qty, request.quantity)
+        levels = self._order_book.get(request.instrument) if self._order_book else None
+        if levels is not None:
+            bid_price, bid_qty, ask_price, ask_qty = levels
+            if request.side is OrderSide.BUY:
+                price = ask_price
+                fill_qty = min(fill_qty, ask_qty)
+            else:
+                price = bid_price
+                fill_qty = min(fill_qty, bid_qty)
+        else:
+            price = quote
+        if self._slippage is not None:
+            if request.side is OrderSide.BUY:
+                price = price * (Decimal(1) + self._slippage)
+            else:
+                price = price * (Decimal(1) - self._slippage)
+        return price, fill_qty
 
     def cancel_order(self, order_id: str) -> Order:
         order = self._orders.get(order_id)
@@ -188,45 +271,45 @@ class PaperBroker:
 class RecordingAdapter:
     """Wraps any adapter and records every call as a plain JSON-safe record."""
 
-    def __init__(self, inner: object, sink: list[dict[str, object]]) -> None:
+    def __init__(self, inner: Adapter, sink: list[dict[str, object]]) -> None:
         self._inner = inner
         self._sink = sink
 
     def connect(self) -> None:
-        self._inner.connect()  # type: ignore[attr-defined]
+        self._inner.connect()
 
     def disconnect(self) -> None:
-        self._inner.disconnect()  # type: ignore[attr-defined]
+        self._inner.disconnect()
 
     def get_quote(self, instrument: str) -> Quote:
-        result = self._inner.get_quote(instrument)  # type: ignore[attr-defined]
+        result = self._inner.get_quote(instrument)
         self._sink.append({"call": ("get_quote", instrument), "result": to_plain(result)})
         return result
 
     def get_bars(self, instrument: str, interval: str = "1d", days: int = 30) -> list[Bar]:
-        result = self._inner.get_bars(instrument, interval, days)  # type: ignore[attr-defined]
+        result = self._inner.get_bars(instrument, interval, days)
         self._sink.append(
             {"call": ("get_bars", instrument, interval, days), "result": to_plain(result)}
         )
         return result
 
     def place_order(self, request: OrderRequest) -> Order:
-        result = self._inner.place_order(request)  # type: ignore[attr-defined]
+        result = self._inner.place_order(request)
         self._sink.append({"call": ("place_order", to_plain(request)), "result": to_plain(result)})
         return result
 
     def cancel_order(self, order_id: str) -> Order:
-        result = self._inner.cancel_order(order_id)  # type: ignore[attr-defined]
+        result = self._inner.cancel_order(order_id)
         self._sink.append({"call": ("cancel_order", order_id), "result": to_plain(result)})
         return result
 
     def get_positions(self) -> list[Position]:
-        result = self._inner.get_positions()  # type: ignore[attr-defined]
+        result = self._inner.get_positions()
         self._sink.append({"call": ("get_positions",), "result": to_plain(result)})
         return result
 
     def get_margin(self) -> Margin:
-        result = self._inner.get_margin()  # type: ignore[attr-defined]
+        result = self._inner.get_margin()
         self._sink.append({"call": ("get_margin",), "result": to_plain(result)})
         return result
 

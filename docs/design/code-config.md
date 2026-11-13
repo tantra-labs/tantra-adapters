@@ -16,6 +16,8 @@ Credentials/keys required to authenticate with a broker:
 | `access_token` | `str` | `""` | OAuth access token (Zerodha, Upstox, Fyers, ...) |
 | `client_id` | `str` | `""` | Broker client / user id (Dhan headers, Angel One `X-ClientCode`) |
 | `api_secret` | `str` | `""` | API secret (Angel One / IIFL / Kotak signing) |
+| `totp_seed` | `str` | `""` | Base32 RFC 6238 TOTP seed for headless 2FA logins |
+| `password` | `str` | `""` | Broker login password (Angel One `loginByPassword`) |
 
 All fields default to empty strings, so `BrokerCredentials()` constructs a
 credential-free adapter — which is exactly what offline contract tests do.
@@ -52,10 +54,15 @@ deterministic `PaperBroker` simulation (see [code-paper](code-paper.md)).
 | `configs/paper.toml` | `paper` | `true` | Deterministic offline simulation; placeholder credentials |
 | `configs/dhan.toml` | `dhan` | `false` | Live DhanHQ v2; `base_url` override commented out |
 | `configs/zerodha.toml` | `zerodha` | `false` | Live Kite Connect; `client_id` unused by the wire headers |
+| `configs/angelone.toml` | `angelone` | `false` | Live SmartAPI; `totp_seed`/`password` commented out for headless login |
+| `configs/upstox.toml` | `upstox` | `false` | Live Upstox v2; `api_secret` for the OAuth exchange |
+| `configs/fyers.toml` | `fyers` | `false` | Live Fyers v3; `api_key` = client id |
+| `configs/kotak.toml` | `kotak` | `false` | Live Kotak Neo; `api_secret` |
+| `configs/iifl.toml` | `iifl` | `false` | Live IIFL; `api_key` = client id |
 
 `configs/README.md` documents the workflow: copy a template to `adapter.toml`,
-fill in credentials, and load it with `AdapterConfig`. Templates carry `YOUR_*`
-placeholders, never real tokens.
+fill in credentials, and load it with `AdapterConfig.from_toml` (stdlib
+`tomllib`). Templates carry `YOUR_*` placeholders, never real tokens.
 
 Example template shape (`configs/dhan.toml`):
 
@@ -69,30 +76,25 @@ access_token = "YOUR_ACCESS_TOKEN"
 client_id = "YOUR_CLIENT_ID"
 ```
 
-## Current State & Limitations (gap 0007)
+## Current State (plan 0002 Phase C complete)
 
 Implemented:
-- `BrokerCredentials` and `AdapterConfig` models.
-- Three templates (`paper`, `dhan`, `zerodha`) + `configs/README.md`.
-
-Missing (tracked by [gap 0007](../gaps/0007-config-templates-unpopulated.md) under [plan 0002](../plans/0002-complete-broker-contract-certification.md)):
-- Templates for `angelone`, `upstox`, `fyers`, `kotak`, `iifl`.
-- An `AdapterConfig.from_toml(path)` loader — there is currently no code that
-  parses a `.toml` into `AdapterConfig`.
-- A directory-driven parse test asserting each template loads into `AdapterConfig`.
-- Wiring `paper = true` directly to `PaperBroker` construction.
+- `BrokerCredentials` (with `totp_seed`/`password`) and `AdapterConfig` models.
+- `AdapterConfig.from_toml(path)` — stdlib `tomllib` loader.
+- All eight templates (`paper`, `dhan`, `zerodha`, `angelone`, `upstox`,
+  `fyers`, `kotak`, `iifl`) + `configs/README.md` with credential-sourcing
+  guidance.
+- A directory-driven parse test (`tests/test_config.py`) asserting every
+  template loads into `AdapterConfig` (kept valid by CI `make check`).
 
 ## Usage
 
 ```python
 from tantra_adapters.common.config import AdapterConfig, BrokerCredentials
 
-config = AdapterConfig(
-    broker="dhan",
-    paper=True,
-    credentials=BrokerCredentials(access_token="...", client_id="..."),
-)
-# gap 0007: no from_toml() loader yet; instantiate the pydantic model directly.
+config = AdapterConfig.from_toml("configs/dhan.toml")
+adapter_type = BROKER_ADAPTERS[config.broker]  # see tantra_adapters.registry
+adapter = adapter_type(credentials=config.credentials)
 ```
 
 ## Credential Handling Guidance
@@ -109,4 +111,3 @@ config = AdapterConfig(
 - [code-registry.md](code-registry.md) — how `broker` names resolve to adapter classes.
 - [code-brokers.md](code-brokers.md) — per-broker use of `credentials` fields in headers.
 - [code-paper.md](code-paper.md) — `PaperBroker` routing when `paper = True`.
-- [Plan 0002](../plans/0002-complete-broker-contract-certification.md) — loader, remaining templates, parse tests (gap 0007).

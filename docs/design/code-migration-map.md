@@ -70,6 +70,7 @@ make check    # ruff check . && ruff format --check . && python -m pytest -q
 
 ## Remaining Work
 
-See [gaps](../gaps/README.md) (0001–0007, tracked by [plan 0002](../plans/0002-complete-broker-contract-certification.md)),
-[plan 0003](../plans/0003-cross-repo-integration.md), and
+Plan 0002 (contract certification, streaming, auth, paper realism, configs) is
+implemented — gaps 0001–0007 closed (`docs/gaps/README.md`). Remaining:
+[plan 0003](../plans/0003-cross-repo-integration.md) and
 [plan 0004](../plans/0004-production-hardening.md).
