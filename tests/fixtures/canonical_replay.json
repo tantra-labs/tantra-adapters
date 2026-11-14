@@ -1,0 +1,98 @@
+[
+  {
+    "call": [
+      "get_quote",
+      "NSE:RELIANCE-EQ"
+    ],
+    "canonical": {
+      "data": {
+        "exchange_ts": "2026-11-14T09:15:30Z",
+        "instrument": "NSE:RELIANCE-EQ",
+        "price": "2456.70",
+        "receive_ts": "2026-11-14T09:15:30Z",
+        "volume": 1000
+      },
+      "type": "ltp"
+    }
+  },
+  {
+    "call": [
+      "place_order",
+      {
+        "_model": "OrderRequest",
+        "fields": {
+          "client_order_id": "3f7c3b2e-9f5a-4c6d-8b1e-2a0f4e5d6c7b",
+          "instrument": "NSE:RELIANCE-EQ",
+          "limit_price": null,
+          "order_type": {
+            "_enum": "OrderType",
+            "value": "market"
+          },
+          "product_type": {
+            "_enum": "ProductType",
+            "value": "intraday"
+          },
+          "quantity": {
+            "_dec": "10"
+          },
+          "side": {
+            "_enum": "OrderSide",
+            "value": "buy"
+          },
+          "tag": null,
+          "time_in_force": {
+            "_enum": "TimeInForce",
+            "value": "day"
+          },
+          "trigger_price": null
+        }
+      }
+    ],
+    "canonical": {
+      "client_order_id": "3f7c3b2e-9f5a-4c6d-8b1e-2a0f4e5d6c7b",
+      "order_id": "PAPER-00001",
+      "status": "filled",
+      "timestamp": "2026-11-14T09:15:30Z"
+    }
+  },
+  {
+    "call": [
+      "get_bars",
+      "NSE:RELIANCE-EQ",
+      "1d",
+      3
+    ],
+    "canonical": [
+      {
+        "close": "2456.70",
+        "high": "2456.70",
+        "instrument": "NSE:RELIANCE-EQ",
+        "interval": "1d",
+        "low": "2456.70",
+        "open": "2456.70",
+        "ts": "2023-12-29T00:00:00Z",
+        "volume": 1000
+      },
+      {
+        "close": "2457.70",
+        "high": "2457.70",
+        "instrument": "NSE:RELIANCE-EQ",
+        "interval": "1d",
+        "low": "2457.70",
+        "open": "2457.70",
+        "ts": "2023-12-30T00:00:00Z",
+        "volume": 1000
+      },
+      {
+        "close": "2458.70",
+        "high": "2458.70",
+        "instrument": "NSE:RELIANCE-EQ",
+        "interval": "1d",
+        "low": "2458.70",
+        "open": "2458.70",
+        "ts": "2023-12-31T00:00:00Z",
+        "volume": 1000
+      }
+    ]
+  }
+]

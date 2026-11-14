@@ -64,6 +64,7 @@ tantra_adapters/
     ├── base.py          # BaseRestAdapter + BrokerApiError
     ├── codec.py         # to_plain / from_plain lossless fixture codec
     ├── config.py        # AdapterConfig + BrokerCredentials (pydantic)
+    ├── contract.py      # Python ↔ Rust canonical wire-contract mapping (plan 0003)
     ├── fixtures.py      # record_fixture / load_fixture (JSONL)
     ├── models.py        # Quote, Bar, OrderRequest, Order, Position, Margin + enums
     ├── parse.py         # as_decimal, non_negative_decimal, as_iso_ts (floats rejected)
@@ -83,6 +84,7 @@ one per module, mirroring the per-crate convention used across the workspace):
 | `common/protocols.py`, `common/transport.py`, `common/base.py` | [code-transport.md](code-transport.md) |
 | `common/config.py` + `configs/*.toml` | [code-config.md](code-config.md) |
 | `common/codec.py`, `common/fixtures.py` | [code-codec.md](code-codec.md) |
+| `common/contract.py` | [code-rust-contract-alignment.md](code-rust-contract-alignment.md) |
 | `paper.py` (PaperBroker / Recording / Replaying) | [code-paper.md](code-paper.md) |
 | `registry.py` | [code-registry.md](code-registry.md) |
 | the seven broker modules | [code-brokers.md](code-brokers.md) |
@@ -141,8 +143,14 @@ make check     # lint + format-check + pytest
   `cancel_order`, WebSocket streaming (`subscribe_ticks`/`Tick`), TOTP headless
   auth, richer `PaperBroker`, full config templates + `AdapterConfig.from_toml`
   loader. Gaps 0001–0007 closed.
-- **Cross-repo integration** — align canonical models with `tantra-market`
-  (Rust), wire adapters into `tantra-exec`, feed `tantra-market` indicators,
-  end-to-end fixture → adapter → OMS → ledger test → [plan 0003](../plans/0003-cross-repo-integration.md).
-- **Production hardening** — rate-limit handling, connection pooling/keep-alive,
-  token refresh, structured logging/tracing, benchmark + fuzz → [plan 0004](../plans/0004-production-hardening.md).
+- **Cross-repo integration** — ✅ implemented (`2026-11-14`, plan 0003
+  contract-mapping scope): `common/contract.py` maps the Python canonical
+  models onto the Rust serde wire shapes (`Tick`/`Bar`/`OrderRequest`/
+  `OrderAck`/`CancelRequest`); mapping table in
+  [code-rust-contract-alignment.md](code-rust-contract-alignment.md);
+  contract tests + deterministic golden replay (`tests/fixtures/
+  canonical_replay.json`). Per plan 0001, live routing into `tantra-exec`
+  stays Rust-owned.
+- **Production hardening** — ✅ implemented (`2026-11-14`, plan 0004):
+  rate-limit handling, connection pooling/keep-alive, token refresh,
+  structured logging/tracing, benchmark + fuzz.

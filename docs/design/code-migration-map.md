@@ -70,7 +70,10 @@ make check    # ruff check . && ruff format --check . && python -m pytest -q
 
 ## Remaining Work
 
-Plan 0002 (contract certification, streaming, auth, paper realism, configs) is
-implemented — gaps 0001–0007 closed (`docs/gaps/README.md`). Remaining:
-[plan 0003](../plans/0003-cross-repo-integration.md) and
-[plan 0004](../plans/0004-production-hardening.md).
+Plan 0002 (contract certification, streaming, auth, paper realism, configs)
+is implemented — gaps 0001–0007 closed (`docs/gaps/README.md`). Plan 0004
+(production hardening) and plan 0003 (cross-repo integration, contract-mapping
+scope — Python adapters are the dev/research path, live routing stays
+Rust-owned per plan 0001) are implemented (`docs/plans/README.md`). Nothing
+is pending in this repository; the consuming follow-on is the `tantra-ffi`
+wheel bridge in the Rust workspace.

@@ -43,6 +43,17 @@
   - **Verification**: `pytest` 134 → 173 green; `ruff check .` +
     `ruff format --check .` clean; `mypy --strict tantra_adapters` clean
     (22 source files).
+* **Plan 0003 — Cross-Repo Integration (COMPLETE 2026-11-14, contract-mapping
+  scope)**: `common/contract.py` — pure, deterministic Python → Rust serde
+  JSON mapping (`Tick`/`Bar`/`OrderRequest`/`OrderAck`/`CancelRequest`,
+  `SIM_EPOCH` sim clock, `project_record`); full mapping table with ✔/△
+  markers in `docs/design/code-rust-contract-alignment.md`;
+  `tests/test_rust_contract_alignment.py` (14) asserts the exact shapes
+  (tagged `{"type": ..., "data": ...}` envelope, UPPERCASE side/TIF, decimal
+  strings); golden replay `tests/fixtures/canonical_replay.json` +
+  `tests/test_canonical_fixture_replay.py` (2, byte-identical). Boundary:
+  Phase B is mapping + contract tests, NOT live routing into `tantra-exec`
+  (plan 0001 — Rust path stays Rust-owned; no Rust touched).
 
 ## Decisions & Discoveries
 * pyproject: declared `tantra` + `pydantic`; all 7 brokers under
@@ -67,12 +78,23 @@
   uses stdlib `tomllib`; `paper = true` stays declarative.
 * Docs mirror the source (`docs/design/code-transport.md` now documents
   pooling/retry/logging/refresh + benchmark numbers; plans 0004 closed).
+* **Contract-alignment lessons (plan 0003)**: Rust `OrderType` tags the price
+  under `content = "price"` (`{"type": "limit", "price": "..."}`) while the
+  `Tick` enum tags content under `"data"` — the content key differs per enum;
+  Rust `OrderSide`/`TimeInForce` are UPPERCASE but `OrderStatus` is
+  snake_case; Python `stop_market` ↔ Rust `stop_loss`, Python `gtd` ↔ Rust
+  `"GTC"` (△ approximation, documented); Python `Order.ts`/`receive_ts` are
+  absent on the adapter path, so the projection pins `SIM_EPOCH`
+  (`2026-11-14T09:15:30Z`) as the deterministic sim clock. `common/contract.py`
+  must be kept in sync with the mapping table and the contract tests (both are
+  the source of truth for the wire shape).
 
 ## Immediate Next Step
-* Plan 0003 (`docs/plans/0003-cross-repo-integration.md`, Proposed): align the
-  Python `Tick`/`Quote`/`Bar` contracts with `tantra-market` (Rust) canonical
-  models, wire adapters into `tantra-exec`, end-to-end fixture → adapter →
-  OMS → ledger test.
+* The consuming side of these shapes is the **`tantra-ffi` wheel** (PyO3
+  Arrow/JSON bridge) and the Rust consumers (`tantra-market`, `tantra-exec`),
+  both out of this repo. In-repo: nothing pending — plan 0004 and plan 0003
+  are implemented; gaps 0001–0007 closed. Next roadmap item would be filed as
+  plan 0005 per `.agents/rules/gap-tracking.md`.
 
 ## Operating Invariants
 * Zero floats in every financial field; entry points stay in sync with

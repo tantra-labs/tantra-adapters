@@ -4,6 +4,15 @@ from tantra_adapters.common.auth import SessionState, build_refresh
 from tantra_adapters.common.base import BaseRestAdapter, BrokerApiError
 from tantra_adapters.common.codec import from_plain, to_plain
 from tantra_adapters.common.config import AdapterConfig, BrokerCredentials
+from tantra_adapters.common.contract import (
+    project_record,
+    to_rust_bar,
+    to_rust_cancel_request,
+    to_rust_ltp,
+    to_rust_order_ack,
+    to_rust_order_request,
+    to_rust_tick,
+)
 from tantra_adapters.common.fixtures import load_fixture, record_fixture
 from tantra_adapters.common.logging import (
     CallSummary,
@@ -77,8 +86,15 @@ __all__ = [
     "load_fixture",
     "log_call_summary",
     "non_negative_decimal",
+    "project_record",
     "record_fixture",
     "redact_headers",
     "redact_url",
     "to_plain",
+    "to_rust_bar",
+    "to_rust_cancel_request",
+    "to_rust_ltp",
+    "to_rust_order_ack",
+    "to_rust_order_request",
+    "to_rust_tick",
 ]
