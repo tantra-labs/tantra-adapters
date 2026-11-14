@@ -1,8 +1,7 @@
 # Plan 0003 — Cross-Repo Integration (Python Adapters ↔ Rust Core)
 
 **Status**: implemented — 2026-11-14, contract-mapping scope (see §0
-boundary decision). See `docs/plans/README.md` and the commit log for the
-closing commit.
+boundary decision). Closing commit: `4fda74e`.
 
 ## 0. Executive Summary
 

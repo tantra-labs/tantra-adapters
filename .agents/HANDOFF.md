@@ -44,7 +44,7 @@
     `ruff format --check .` clean; `mypy --strict tantra_adapters` clean
     (22 source files).
 * **Plan 0003 — Cross-Repo Integration (COMPLETE 2026-11-14, contract-mapping
-  scope)**: `common/contract.py` — pure, deterministic Python → Rust serde
+  scope, commit `4fda74e`)**: `common/contract.py` — pure, deterministic Python → Rust serde
   JSON mapping (`Tick`/`Bar`/`OrderRequest`/`OrderAck`/`CancelRequest`,
   `SIM_EPOCH` sim clock, `project_record`); full mapping table with ✔/△
   markers in `docs/design/code-rust-contract-alignment.md`;
