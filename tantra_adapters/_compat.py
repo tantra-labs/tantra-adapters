@@ -10,7 +10,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 try:  # pragma: no cover - exercised only when the native wheel is absent
-    from tantra import Decimal as TantraDecimal
+    from tantra import Decimal as TantraDecimal  # type: ignore[attr-defined]
 
     VYAAPAAR_AVAILABLE = True
 except ImportError:  # pragma: no cover

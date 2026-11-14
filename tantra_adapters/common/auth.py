@@ -20,6 +20,7 @@ import base64
 import hashlib
 import hmac
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from tantra_adapters.common.config import BrokerCredentials
@@ -246,6 +247,30 @@ def login(broker: str, transport: HttpTransport, credentials: BrokerCredentials)
             )
         return SessionState(access_token=credentials.access_token, expires_at=_day_expiry())
     raise ValueError(f"unknown broker for headless login: {broker!r}")
+
+
+def build_refresh(
+    broker: str,
+    transport: HttpTransport,
+    credentials: BrokerCredentials,
+    session: SessionState,
+) -> Callable[[], None]:
+    """Build a ``token_refresh`` callback that re-runs the broker login flow.
+
+    The returned zero-argument callable re-authenticates via :func:`login` and
+    mutates ``credentials``/``session`` in place, so the adapter's
+    ``_headers()`` picks up the rotated access token on the retried request.
+    Token-only brokers validate that an access token is provisioned.
+    """
+
+    def _refresh() -> None:
+        state = login(broker, transport, credentials)
+        credentials.access_token = state.access_token
+        session.access_token = state.access_token
+        session.feed_token = state.feed_token
+        session.expires_at = state.expires_at
+
+    return _refresh
 
 
 def _require(body: object, field: str) -> str:

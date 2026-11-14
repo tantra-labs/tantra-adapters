@@ -7,71 +7,72 @@
   adapters, entry points, `configs/`, `examples/`, `scripts/`, `Makefile`, CI.
   `make check` green.
 * **Plan 0002 — Broker Contract Certification & Adapter Parity (COMPLETE
-  2026-11-13)**: Phases A–D all landed, gaps 0001–0007 closed, plan 0002 moved
-  to Implemented:
-  - **Phase A** — contract tests for all 7 brokers
-    (`tests/test_{angelone,upstox,fyers,kotak,iifl}.py` mirroring
-    `test_dhan.py`; `MockTransport` canned payloads; exact `Decimal`
-    assertions; `ValueError`/`BrokerApiError` error paths); real `get_bars`
-    returning `list[Bar]` honoring `interval`/`days` for all 7 (dhan charts,
-    angelone historical, upstox historical-candle, fyers history, kotak
-    historical, iifl historical, zerodha pre-existing); parsed `cancel_order`
-    reading the broker response body (order id + status) in all 7.
-  - **Phase B** — `WebSocketTransport` protocol +
-    `MockWebSocketTransport` in-memory mock + per-broker
-    `subscribe_ticks(instruments, callback)` translating frames to a new
-    canonical `Tick` model (`tests/test_streaming.py`); `common/auth.py` with
-    stdlib RFC 6238 `totp_code` + `login_zerodha`/`login_angelone`/
-    `login_upstox` + token-only brokers + `SessionState` expiry tracking
-    (`tests/test_auth.py`). `BrokerCredentials` gained `totp_seed` + `password`.
-  - **Phase C** — `PaperBroker` optional realism: `order_book` depth
-    (bid/ask qty caps → partial fills), `slippage`, `latency_ms` (on
-    `Order.meta`), seeded `reject_rate`/`reject_seed` risk-limit rejection;
-    defaults stay deterministic for CI. `AdapterConfig.from_toml(path)` (stdlib
-    `tomllib`) + `angelone/upstox/fyers/kotak/iifl.toml` templates +
-    directory-driven `tests/test_config.py` parse suite + credential-sourcing
-    guidance in `configs/README.md`.
-  - **Phase D** — public exports (`to_plain`/`from_plain`,
-    `BaseRestAdapter`/`BrokerApiError`, `Tick`, `WebSocketTransport`,
-    `MockWebSocketTransport`) from `common/__init__.py`; typed
-    `MockTransportError`; `Adapter` protocol fully typed with canonical models
-    and `RecordingAdapter`'s `inner: Adapter` (no `# type: ignore[attr-defined]`);
-    `client_order_id` idempotency echo on `Order.meta` for all 7 brokers
-    (`tests/test_improvements.py`).
-  - **Verification**: `pytest` 44 → 134 tests green; `ruff check .` +
-    `ruff format --check .` clean (incl. previously-unformatted
-    `docs/design/code-public-api.md`); `mypy tantra_adapters --strict` clean
-    (21 source files).
-* **Docs reflect the source**: `code-brokers.md` rewritten with real
-  bars/cancel/streaming rows + coverage table; `code-config.md` (from_toml,
-  8 templates), `code-paper.md` (realism knobs), `code-public-api.md` (new
-  exports), `code-transport.md`, `code-migration-map.md`, `architecture.md`
-  updated; plans 0003/0004 link text fixed after plan 0002 doc removal.
+  2026-11-13)**: contract tests for all 7 brokers, real `get_bars`
+  (`list[Bar]`), parsed `cancel_order`, `WebSocketTransport` +
+  `MockWebSocketTransport` + `subscribe_ticks` + canonical `Tick`,
+  `common/auth.py` stdlib RFC 6238 TOTP + `login_zerodha`/`login_angelone`/
+  `login_upstox` + token-only brokers + `SessionState`, `PaperBroker` realism
+  knobs, `AdapterConfig.from_toml` + 8 `configs/` templates, Phase D exports /
+  typed `MockTransportError` / `client_order_id` idempotency. Gaps 0001–0007
+  closed. `pytest` 44 → 134; ruff clean; mypy clean.
+* **Plan 0004 — Production Hardening (COMPLETE 2026-11-14, commit `df77468`)**:
+  - **A Rate-limit**: `RetryTransport` (bounded `429` backoff/retry with
+    jitter; honours `Retry-After` clamped to `max_delay`; exhaustion →
+    `BrokerApiError`); `MockTransport` per-URL response sequences + `headers`
+    map + `last_headers`; `BaseRestAdapter(retry=True)` default.
+    `tests/test_rate_limit.py` (13).
+  - **B Pooling**: `PooledHttpTransport` — per-host keep-alive
+    `http.client`, `_KeepAliveHTTP(S)Connection` subclasses set TCP_NODELAY,
+    stale-connection retry once, `close()` on `disconnect()`; the new
+    production default transport. `tests/test_transport_pooling.py` (6,
+    loopback server). Benchmark in `docs/design/code-transport.md`: 2.40×
+    throughput speedup (2783 vs 1158 req/s; mean 0.358 vs 0.862 ms).
+  - **C Token refresh**: `BaseRestAdapter(session, token_refresh)`
+    refresh-before-expiry (`SessionState.is_expired`) + `401` → refresh →
+    retry once with rebuilt headers; `build_refresh` in `common/auth.py`.
+    `tests/test_token_refresh.py` (7).
+  - **D Observability**: `common/logging.py` — one redacted call-summary
+    record per request (`log_call_summary`, logger `tantra.adapters`),
+    `redact_headers`/`redact_url`. `tests/test_observability.py` (6).
+  - **E Benchmark & fuzz**: `scripts/benchmark_transport.py` (numbers in
+    `docs/design/code-transport.md`: ticks 80 676/s, quotes 124 713/s, bars
+    130 967/s), `scripts/fuzz_parse.py` (5000 seeded cases, 0 crashes, no
+    float leakage), CI sweep in `tests/test_fuzz.py` (7). Fuzzer-discovered
+    hardening: dhan `_parse_tick_frame` non-dict items, zerodha `depth`
+    non-dict guard, dhan `get_quote` non-dict `ltp` guard.
+  - **Verification**: `pytest` 134 → 173 green; `ruff check .` +
+    `ruff format --check .` clean; `mypy --strict tantra_adapters` clean
+    (22 source files).
 
 ## Decisions & Discoveries
-* pyproject: removed `rust_decimal`; declared `tantra` + `pydantic`; all 7
-  brokers registered under `[project.entry-points."tantra.adapters"]`.
-* **Latent bug caught by mypy**: a method parameter named `json` shadowed the
-  `json` module in `UrllibTransport`; parameter renamed to `payload` across the
-  transport protocol and all call sites.
+* pyproject: declared `tantra` + `pydantic`; all 7 brokers under
+  `[project.entry-points."tantra.adapters"]`.
 * Zero-floats invariant: `as_decimal` rejects `float` (→ `TypeError`);
-  `UrllibTransport` decodes JSON with `parse_float=Decimal`.
-* Dhan position net quantity is `buyQty - sellQty` (long positive).
-* `get_bars` window semantics: `_bars_range(days)` yields `[end-days, end)`
-  via a `bars_end_date` anchor (default `date.today()`; tests pin it so
-  `MockTransport` URLs stay deterministic).
-* `AdapterConfig.from_toml` uses stdlib `tomllib` (py3.11); `paper = true`
-  remains declarative — routing to `PaperBroker` construction is a documented
-  deployment decision, not wired by the loader.
+  every transport decodes JSON with `parse_float=Decimal`.
+* **Keep-alive lesson**: reusing an `http.client` connection against a Naive
+  loopback server costs ~40 ms/request (Nagle + delayed ACK); both the pooled
+  client and the reference server set `TCP_NODELAY`. `min()` on `float * int`
+  backoff math was fine, but `2**attempt` with an `int` exponent is typed
+  `Any` by typeshed — use `2.0**attempt` for mypy-strict float arithmetic.
+* **mypy fix**: the installed PyPI `tantra` package is an unrelated AI-agent
+  framework (no `Decimal`), so the guarded import in `_compat.py` carries
+  `# type: ignore[attr-defined]`. `uv.lock` is NOT committed (uv resolves the
+  wrong `tantra`); the real `tantra-ffi` wheel is expected in production.
+* `MockTransport.history` entries are now 4-tuples
+  `(key, url, payload, headers)` — `history[i][2]` still yields the payload.
+* `Retry-After` is honoured verbatim (clamped to `max_delay`); `max_attempts`
+  bounds retries (no infinite loop); exhausted 429 → `BrokerApiError(429)`.
+* Dhan position net quantity is `buyQty - sellQty`; `get_bars` window is
+  `[end-days, end)` via a pinned `bars_end_date` anchor; `AdapterConfig.from_toml`
+  uses stdlib `tomllib`; `paper = true` stays declarative.
+* Docs mirror the source (`docs/design/code-transport.md` now documents
+  pooling/retry/logging/refresh + benchmark numbers; plans 0004 closed).
 
 ## Immediate Next Step
 * Plan 0003 (`docs/plans/0003-cross-repo-integration.md`, Proposed): align the
   Python `Tick`/`Quote`/`Bar` contracts with `tantra-market` (Rust) canonical
   models, wire adapters into `tantra-exec`, end-to-end fixture → adapter →
   OMS → ledger test.
-* Plan 0004 (`docs/plans/0004-production-hardening.md`, Proposed): rate-limit
-  handling/backoff, pooled transport + keep-alive, token refresh before 401,
-  structured logging/tracing, benchmark + fuzz.
 
 ## Operating Invariants
 * Zero floats in every financial field; entry points stay in sync with

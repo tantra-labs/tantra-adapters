@@ -62,6 +62,8 @@ class DhanAdapter(BaseRestAdapter):
         data = payload.get("data", payload)
         ticks: list[Tick] = []
         for item in data if isinstance(data, list) else [data]:
+            if not isinstance(item, dict):
+                continue
             symbol = item.get("securityId") or item.get("tradingSymbol")
             instrument = instrument_for_symbol(symbol, instruments)
             if instrument is None or item.get("ltp") is None:
@@ -98,7 +100,8 @@ class DhanAdapter(BaseRestAdapter):
     def get_quote(self, instrument: str) -> Quote:
         _, symbol = self._exchange_segment(instrument)
         body = self._get(f"/v2/marketfeed/ltp/{symbol}")
-        last_price = as_decimal(body.get("ltp", {}).get(symbol, 0))
+        ltp_map = body.get("ltp") if isinstance(body, dict) else None
+        last_price = as_decimal(ltp_map.get(symbol, 0) if isinstance(ltp_map, dict) else 0)
         return Quote(instrument=instrument, last_price=last_price)
 
     def get_bars(self, instrument: str, interval: str = "1D", days: int = 100) -> list[Bar]:

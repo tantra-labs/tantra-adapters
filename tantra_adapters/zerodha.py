@@ -63,14 +63,17 @@ class ZerodhaAdapter(BaseRestAdapter):
             ltp = data.get("last_price")
             if ltp is None:
                 continue
+            depth = data.get("depth")
+            buy_levels = depth.get("buy") if isinstance(depth, dict) else None
+            sell_levels = depth.get("sell") if isinstance(depth, dict) else None
             ticks.append(
                 Tick(
                     instrument=instrument,
                     last_price=ltp,
                     volume=data.get("volume"),
                     change=data.get("change"),
-                    bid=_best_quote(data.get("depth", {}).get("buy")),
-                    ask=_best_quote(data.get("depth", {}).get("sell")),
+                    bid=_best_quote(buy_levels),
+                    ask=_best_quote(sell_levels),
                 )
             )
         return ticks

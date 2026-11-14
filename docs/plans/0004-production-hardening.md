@@ -1,6 +1,6 @@
 # Plan 0004 — Production Hardening (Transport & Auth Reliability)
 
-**Status**: proposed
+**Status**: implemented
 
 ## 0. Executive Summary
 
@@ -70,3 +70,39 @@ contract-certified adapters (plan 0002, implemented 2026-11-13) are in use.
   contract parity this hardening applies to.
 - `tantra-exec` — the production execution router that consumes hardened
   adapter calls.
+
+## 5. Implementation Note (implemented 2026-11-14)
+
+All five phases landed in commit `feat(adapters): production hardening
+(rate-limit, pooling, token refresh, observability, fuzz)` and the plan moved
+to Implemented (see `docs/plans/README.md`):
+
+- **Phase A — rate-limit handling**: `RetryTransport` (bounded `429`
+  backoff/retry with jitter, `Retry-After` honoured and clamped to
+  `max_delay`, exhaustion → `BrokerApiError`); `MockTransport` gained per-URL
+  response sequences and a `headers` map for response headers;
+  `BaseRestAdapter(retry=True)` wraps adapters by default. 13 contract tests
+  in `tests/test_rate_limit.py`.
+- **Phase B — connection pooling & keep-alive**: `PooledHttpTransport`
+  (`http.client` per-host keep-alive, `TCP_NODELAY` subclasses, stale
+  connection retried once, `close()` on `disconnect()`); protocol signatures
+  unchanged; 6 loopback-server tests in `tests/test_transport_pooling.py`;
+  before/after benchmark recorded in `docs/design/code-transport.md`
+  (2.40× throughput speedup).
+- **Phase C — token refresh**: `BaseRestAdapter(session, token_refresh)`
+  refreshes before expiry and retries once on `401` with rebuilt headers;
+  `build_refresh` turns a broker login flow into the refresh callback; 7
+  contract tests in `tests/test_token_refresh.py`.
+- **Phase D — observability**: `common/logging.py` — one redacted
+  call-summary record per request (`log_call_summary`), `redact_headers`,
+  `redact_url`; 6 tests in `tests/test_observability.py`; new public exports.
+- **Phase E — benchmark & fuzz**: `scripts/benchmark_transport.py` (numbers
+  in `docs/design/code-transport.md`), `scripts/fuzz_parse.py` (5000 seeded
+  cases, 0 crashes, no float leakage), CI-scale sweep in
+  `tests/test_fuzz.py` (7 tests). Hardened dhan/zerodha frame parsing and
+  the dhan quote path discovered by the fuzzer (non-dict payloads now fail
+  cleanly).
+- **Verification**: `pytest` 134 → 173 tests green; `ruff check .` +
+  `ruff format --check .` clean; `mypy --strict tantra_adapters` clean
+  (22 source files; the guarded `tantra` import in `_compat.py` gained a
+  `type: ignore[attr-defined]` for the non-FFI PyPI `tantra` package).
